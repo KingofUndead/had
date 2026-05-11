@@ -1,4 +1,4 @@
-module github.com/Mr-Spect3r/FAD
+module github.com/Mr-Spect3r/had
 
 go 1.26
 
