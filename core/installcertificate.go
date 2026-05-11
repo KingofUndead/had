@@ -16,7 +16,7 @@ func InstallCertificate() error {
 	certBuffer := new(bytes.Buffer)
 	pem.Encode(certBuffer, &pem.Block{Type: "CERTIFICATE", Bytes: ca.Certificate[0]})
 
-	certPath := "Fad.crt"
+	certPath := "Had.crt"
 	if err := os.WriteFile(certPath, certBuffer.Bytes(), 0644); err != nil {
 		return fmt.Errorf("failed to save certificate: %v", err)
 	}
@@ -65,13 +65,13 @@ func installMacCert(certPath string) error {
 }
 
 func installLinuxCert(certPath string) error {
-	cmd := exec.Command("sudo", "cp", certPath, "/usr/local/share/ca-certificates/Fad.crt")
+	cmd := exec.Command("sudo", "cp", certPath, "/usr/local/share/ca-certificates/had.crt")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		homeDir, _ := os.UserHomeDir()
 		certDir := homeDir + "/.local/share/ca-certificates"
 		os.MkdirAll(certDir, 0755)
-		cmd = exec.Command("cp", certPath, certDir+"/Fad.crt")
+		cmd = exec.Command("cp", certPath, certDir+"/had.crt")
 		output, err = cmd.CombinedOutput()
 		if err != nil {
 			return fmt.Errorf("failed to copy certificate: %v\n%s", err, output)
@@ -99,7 +99,7 @@ func installLinuxCert(certPath string) error {
 }
 
 func ShowManualInstructions() {
-	certPath := "Fad.crt"
+	certPath := "had.crt"
 	
 	fmt.Printf("\n%s━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━%s\n", "\033[33m", "\033[0m")
 	fmt.Printf("%s                    MANUAL CERTIFICATE INSTALLATION%s\n", "\033[1m", "\033[0m")
@@ -110,7 +110,7 @@ func ShowManualInstructions() {
 	switch runtime.GOOS {
 	case "windows":
 		fmt.Println("Windows Installation:")
-		fmt.Println("  1. Double-click Fad.crt")
+		fmt.Println("  1. Double-click had.crt")
 		fmt.Println("  2. Click 'Install Certificate'")
 		fmt.Println("  3. Select 'Current User' or 'Local Machine'")
 		fmt.Println("  4. Select 'Place all certificates in the following store'")
@@ -119,9 +119,9 @@ func ShowManualInstructions() {
 		
 	case "darwin":
 		fmt.Println("macOS Installation:")
-		fmt.Println("  1. Double-click Fad.crt")
+		fmt.Println("  1. Double-click had.crt")
 		fmt.Println("  2. Keychain Access will open")
-		fmt.Println("  3. Find 'Fad' certificate")
+		fmt.Println("  3. Find 'had' certificate")
 		fmt.Println("  4. Double-click it")
 		fmt.Println("  5. Expand 'Trust' section")
 		fmt.Println("  6. Set 'SSL' to 'Always Trust'")
@@ -130,15 +130,15 @@ func ShowManualInstructions() {
 	case "linux":
 		fmt.Println("Linux Installation:")
 		fmt.Println("  Option 1 (Ubuntu/Debian):")
-		fmt.Println("    sudo cp Fad.crt /usr/local/share/ca-certificates/")
+		fmt.Println("    sudo cp had.crt /usr/local/share/ca-certificates/")
 		fmt.Println("    sudo update-ca-certificates")
 		fmt.Println()
 		fmt.Println("  Option 2 (Fedora/RHEL):")
-		fmt.Println("    sudo cp Fad.crt /etc/pki/ca-trust/source/anchors/")
+		fmt.Println("    sudo cp had.crt /etc/pki/ca-trust/source/anchors/")
 		fmt.Println("    sudo update-ca-trust")
 		fmt.Println()
 		fmt.Println("  Option 3 (Arch Linux):")
-		fmt.Println("    sudo cp Fad.crt /etc/ca-certificates/trust-source/anchors/")
+		fmt.Println("    sudo cp had.crt /etc/ca-certificates/trust-source/anchors/")
 		fmt.Println("    sudo trust extract-compat")
 	}
 	
