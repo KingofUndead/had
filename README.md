@@ -81,10 +81,13 @@ HAD now includes a **MITM Capture Proxy** that intercepts HTTPS traffic to autom
 
 | Feature | Preview |
 |---------|---------|
-| **Normal Download** | ![Normal](https://github.com/user-attachments/assets/e1cd29f0-2d04-4af2-9e71-0d1492fc3aba) |
-| **Web Scraping** | ![Scraping](https://github.com/user-attachments/assets/48a0409b-8bea-48bf-93ee-fa4e2f66f32d) |
-| **Website Backup** | ![Website Backup](https://github.com/user-attachments/assets/826d5701-1f31-4992-97c0-89545386b083) |
-| **Progress Bars** | ![Progress](https://github.com/user-attachments/assets/3c39c0be-3e9e-4004-8d75-58962bd90158) |
+| **Multi-Thread Download** | ![Multi-Thread](https://github.com/user-attachments/assets/633999ce-c3da-4db5-b4be-b4714164a504) |
+| **Real-time Progress** | ![Progress](https://github.com/user-attachments/assets/2e3f4fde-4e6c-4e79-bdae-fa9094bf2993) |
+| **Session Resume (JSON)** | ![Session Resume](https://github.com/user-attachments/assets/370683d3-0d54-4b9c-8e40-f1ce2f515667) |
+| **MITM Capture Proxy** | ![Capture Proxy](https://github.com/user-attachments/assets/6cba171d-632c-4aef-a654-ae33c9b21b4f) |
+| **JSON Export from Proxy** | ![JSON Export](https://github.com/user-attachments/assets/7f098862-e7b4-4baa-9663-b28489e9b5e3) |
+| **Website Backup (Clone)** | ![Website Backup](https://github.com/user-attachments/assets/09883fe7-14d7-4045-8269-ea3c5bd5b1ae) |
+| **Web Scraping** | ![Scraping](https://github.com/user-attachments/assets/fa49cd59-418d-4690-a8dc-b7a8ab2f043b) |
 
 ## 📦 Installation
 
