@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    /* DARK HORROR THEME - BLOOD RED */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      width: 280px;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a0505 100%);
+      font-family: 'Courier New', 'Segoe UI', 'Monaco', monospace;
+      color: #8b0000;
+      padding: 15px;
+      border: 2px solid #4a0000;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(139, 0, 0, 0.5);
+    }
+    
+    h3 {
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      color: #cc0000;
+      text-shadow: 0 0 10px #ff0000, 0 0 5px #660000;
+      letter-spacing: 3px;
+      margin-bottom: 10px;
+      word-break: keep-all;
+    }
+    
+    .sub {
+      text-align: center;
+      font-size: 10px;
+      color: #5a1e1e;
+      margin-bottom: 15px;
+      letter-spacing: 2px;
+    }
+    
+    .status {
+      text-align: center;
+      padding: 10px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 13px;
+      margin-bottom: 15px;
+      font-family: monospace;
+      text-transform: uppercase;
+    }
+    
+    .status-on {
+      background-color: #1a0303;
+      border: 1px solid #ff0000;
+      color: #ff3333;
+      box-shadow: 0 0 12px rgba(255, 0, 0, 0.4);
+      animation: pulse 1s infinite;
+    }
+    
+    .status-off {
+      background-color: #0a0a0a;
+      border: 1px solid #4a0000;
+      color: #6b2e2e;
+    }
+    
+    @keyframes pulse {
+      0% { text-shadow: 0 0 2px red; }
+      100% { text-shadow: 0 0 8px red; }
+    }
+    
+    .group {
+      margin-bottom: 12px;
+    }
+    
+    label {
+      display: block;
+      font-size: 11px;
+      color: #9b2e2e;
+      margin-bottom: 5px;
+      letter-spacing: 1px;
+      font-weight: bold;
+    }
+    
+    input, select {
+      width: 100%;
+      padding: 8px 10px;
+      background-color: #110000;
+      border: 1px solid #6b0000;
+      border-radius: 6px;
+      color: #ff6666;
+      font-size: 12px;
+      font-family: monospace;
+      transition: all 0.2s ease;
+    }
+    
+    input:focus, select:focus {
+      outline: none;
+      border-color: #ff0000;
+      box-shadow: 0 0 8px rgba(255, 0, 0, 0.6);
+      background-color: #1a0202;
+    }
+    
+    input::placeholder {
+      color: #3a1a1a;
+    }
+    
+    button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: bold;
+      font-family: monospace;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-top: 8px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(180deg, #2a0000 0%, #1a0000 100%);
+      border: 1px solid #aa0000;
+      color: #ff4444;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    }
+    
+    .btn-primary:hover {
+      background: linear-gradient(180deg, #3a0000 0%, #2a0000 100%);
+      border-color: #ff0000;
+      color: #ff8888;
+      box-shadow: 0 0 12px rgba(255, 0, 0, 0.4);
+      text-shadow: 0 0 3px red;
+    }
+    
+    .btn-danger {
+      background: linear-gradient(180deg, #1a0000 0%, #0a0000 100%);
+      border: 1px solid #660000;
+      color: #992222;
+    }
+    
+    .btn-danger:hover {
+      background: linear-gradient(180deg, #2a0000 0%, #1a0000 100%);
+      border-color: #aa0000;
+      color: #cc5555;
+      box-shadow: 0 0 8px rgba(170, 0, 0, 0.4);
+    }
+    
+    hr {
+      margin: 15px 0 10px;
+      border: none;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #660000, transparent);
+    }
+    
+    .footer {
+      font-size: 9px;
+      text-align: center;
+      color: #2a0a0a;
+      letter-spacing: 1px;
+    }
+    
+    .skull {
+      text-align: center;
+      font-size: 28px;
+      margin-bottom: 5px;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="skull">👁️</div>
+  <h3>HAD</h3>
+  <div class="sub">/// DARK PROXY ///</div>
+  
+  <div id="status" class="status status-off">⚫ INACTIVE ⚫</div>
+  
+  <div class="group">
+    <label>🔴 PROXY TYPE</label>
+    <select id="scheme">
+      <option value="http">HTTP</option>
+      <option value="https">HTTPS</option>
+      <option value="socks4">SOCKS4</option>
+      <option value="socks5">SOCKS5</option>
+    </select>
+  </div>
+  
+  <div class="group">
+    <label>🏚️ HOST</label>
+    <input type="text" id="host" placeholder="127.0.0.1" value="127.0.0.1">
+  </div>
+  
+  <div class="group">
+    <label>🗡️ PORT</label>
+    <input type="number" id="port" placeholder="8085" value="8085">
+  </div>
+  
+  <button id="enableBtn" class="btn-primary">🌑 ACTIVATE</button>
+  <button id="disableBtn" class="btn-danger">⛧ DEACTIVATE</button>
+  
+  <hr>
+  <div class="footer">HAD // WAITING IN THE DARK</div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
