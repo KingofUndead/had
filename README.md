@@ -91,21 +91,6 @@ HAD now includes a **MITM Capture Proxy** that intercepts HTTPS traffic to autom
 | **Extension Had** |![Extension](https://github.com/user-attachments/assets/ab0ea00b-7d44-45cf-8824-eb998a6c453d)
 ## 📦 Installation
 
-### Binary Downloads
-
-**Windows:**
-- `had-windows-amd64.exe` - 64-bit
-- `had-windows-386.exe` - 32-bit
-
-**Linux:**
-- `had-linux-amd64` - 64-bit
-- `had-linux-arm64` - ARM64 (Raspberry Pi, ARM servers)
-- `had-linux-386` - 32-bit
-
-**macOS:**
-- `had-darwin-amd64` - Intel Mac
-- `had-darwin-arm64` - Apple Silicon (M1/M2/M3)
-
 ### Go Installation
 
 ```bash
