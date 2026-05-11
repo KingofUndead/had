@@ -4,8 +4,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Mr-Spect3r/fad2/core"
-	"github.com/Mr-Spect3r/fad2/web"
+	"github.com/Mr-Spect3r/fad/core"
+	"github.com/Mr-Spect3r/fad/web"
 )
 
 func main() {
