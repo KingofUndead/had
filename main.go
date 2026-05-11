@@ -15,7 +15,7 @@ func main() {
 		return
 	}
 	
-	core.RunFAD()
+	core.RunHAD()
 }
 
 func isWebDownloaderMode() bool {
