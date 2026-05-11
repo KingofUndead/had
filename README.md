@@ -5,11 +5,11 @@
 
 A powerful, multi-threaded downloader with support for **HTTP/HTTPS**, **FTP/FTPS**, **SFTP**, **Metalink**, **MITM Capture Proxy**, **proxy connections**, **smart resume capabilities**, **JSON-RPC interface**, and **complete website backup tool**. Built for speed and reliability.
 
-## 🎉 New in v3.3.5
+## 🎉 New in v3.2.5
 
 HAD now includes a **MITM Capture Proxy** that intercepts HTTPS traffic to automatically detect and capture downloadable files, **batch download from captured JSON**, and **automatic CA certificate installation** for seamless HTTPS interception.
 
-<a href="https://github.com/Mr-Spect3r/had/releases/tag/3.3.5">Release v3.3.5</a>
+<a href="https://github.com/Mr-Spect3r/had/releases/tag/3.2.5">Release v3.2.5</a>
 
 ## ✨ Features
 
@@ -27,7 +27,7 @@ HAD now includes a **MITM Capture Proxy** that intercepts HTTPS traffic to autom
 - 🌍 **Cross-platform** - Windows, Linux, macOS, ARM64
 - 🔐 **Integrity checks** - SHA256, SHA1, MD5 verification
 
-### MITM Capture Proxy (NEW in v3.3.5)
+### MITM Capture Proxy (NEW in v3.2.5)
 - 🔒 **HTTPS interception** - Full Man-in-the-Middle proxy capabilities
 - 🎯 **Auto-detection** - Automatically detects videos, music, images, documents, archives
 - 🔍 **Hidden URL extraction** - Scrapes HTML, JSON, and JavaScript for buried links
@@ -40,7 +40,7 @@ HAD now includes a **MITM Capture Proxy** that intercepts HTTPS traffic to autom
 - 🍪 **Cookie support** - Pass cookies through the proxy
 - 🔐 **Auto-certificate** - Automatic CA certificate installation
 
-### Download from Captured JSON (NEW in v3.3.5)
+### Download from Captured JSON (NEW in v3.2.5)
 - 📦 **Batch download** - Download all captured files with one command
 - ⚡ **Smart threading** - Auto-adjusts threads based on file size
 - 🔄 **Concurrent downloads** - Download multiple files simultaneously
@@ -106,7 +106,7 @@ HAD now includes a **MITM Capture Proxy** that intercepts HTTPS traffic to autom
 ### Go Installation
 
 ```bash
-go install github.com/Mr-Spect3r/had@3.3.5
+go install github.com/Mr-Spect3r/had@3.2.5
 ```
 
 ### From Source
@@ -406,7 +406,7 @@ curl http://localhost:6800/api/version
 | `-save-session` | `true` | Save session to JSON if interrupted |
 | `-f` | `""` | File containing download URLs (one per line) |
 
-### Capture Proxy Options (NEW in v3.3.5)
+### Capture Proxy Options (NEW in v3.2.5)
 
 | Option | Default | Description |
 |--------|---------|-------------|
@@ -426,7 +426,7 @@ curl http://localhost:6800/api/version
 | `-capture-body` | `false` | Capture request/response bodies |
 | `-install-cert` | `true` | Auto-install CA certificate |
 
-### Download from JSON Options (NEW in v3.3.5)
+### Download from JSON Options (NEW in v3.2.5)
 
 | Option | Default | Description |
 |--------|---------|-------------|
@@ -649,7 +649,7 @@ Remaining: 45s  Left: 0.6GB
 
 ```text
 ╔════════════════════════════════════════════════════════════════╗
-║              CAPTURE PROXY - ADVANCED MODE v3.3.5             ║
+║              CAPTURE PROXY - ADVANCED MODE v3.2.5             ║
 ╚════════════════════════════════════════════════════════════════╝
 
 ✓ Proxy: :8085
