@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Had Proxy",
+  "version": "1.0",
+  "description": "A proxy manager For Had Project",
+  "permissions": ["proxy", "storage"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Had Proxy"
+  },
+  "icons": {
+    "128": "had.png"
+  }
+}
