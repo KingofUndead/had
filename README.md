@@ -1,4 +1,4 @@
-# 🚀 FAD - Fast Advanced Downloader
+# 🚀 HAD - Hyper Advanced Downloader
 
 [![Go Version](https://img.shields.io/badge/Go-1.26+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS%20%7C%20ARM64-lightgrey)]()
@@ -7,9 +7,9 @@ A powerful, multi-threaded downloader with support for **HTTP/HTTPS**, **FTP/FTP
 
 ## 🎉 New in v3.3.5
 
-FAD now includes a **MITM Capture Proxy** that intercepts HTTPS traffic to automatically detect and capture downloadable files, **batch download from captured JSON**, and **automatic CA certificate installation** for seamless HTTPS interception.
+HAD now includes a **MITM Capture Proxy** that intercepts HTTPS traffic to automatically detect and capture downloadable files, **batch download from captured JSON**, and **automatic CA certificate installation** for seamless HTTPS interception.
 
-<a href="https://github.com/Mr-Spect3r/fad/releases/tag/3.3.5">Release v3.3.5</a>
+<a href="https://github.com/Mr-Spect3r/had/releases/tag/3.3.5">Release v3.3.5</a>
 
 ## ✨ Features
 
@@ -91,30 +91,30 @@ FAD now includes a **MITM Capture Proxy** that intercepts HTTPS traffic to autom
 ### Binary Downloads
 
 **Windows:**
-- `fad-windows-amd64.exe` - 64-bit
-- `fad-windows-386.exe` - 32-bit
+- `had-windows-amd64.exe` - 64-bit
+- `had-windows-386.exe` - 32-bit
 
 **Linux:**
-- `fad-linux-amd64` - 64-bit
-- `fad-linux-arm64` - ARM64 (Raspberry Pi, ARM servers)
-- `fad-linux-386` - 32-bit
+- `had-linux-amd64` - 64-bit
+- `had-linux-arm64` - ARM64 (Raspberry Pi, ARM servers)
+- `had-linux-386` - 32-bit
 
 **macOS:**
-- `fad-darwin-amd64` - Intel Mac
-- `fad-darwin-arm64` - Apple Silicon (M1/M2/M3)
+- `had-darwin-amd64` - Intel Mac
+- `had-darwin-arm64` - Apple Silicon (M1/M2/M3)
 
 ### Go Installation
 
 ```bash
-go install github.com/Mr-Spect3r/fad@3.3.5
+go install github.com/Mr-Spect3r/had@3.3.5
 ```
 
 ### From Source
 
 ```bash
-git clone https://github.com/Mr-Spect3r/fad.git
-cd fad
-go build -o fad .
+git clone https://github.com/Mr-Spect3r/had.git
+cd had
+go build -o had .
 ```
 
 ## 🚀 Quick Start
@@ -125,19 +125,19 @@ Capture download links while browsing:
 
 ```bash
 # Start capture proxy on port 8085
-./fad -capture-proxy :8085 -capture-types video,music
+./had -capture-proxy :8085 -capture-types video,music
 
 # Capture with custom extensions
-./fad -capture-proxy :9090 -capture-types video,archive -capture-exts .webm,.mka
+./had -capture-proxy :9090 -capture-types video,archive -capture-exts .webm,.mka
 
 # Auto-download captured files
-./fad -capture-proxy :8085 -capture-auto -capture-output ./downloads
+./had -capture-proxy :8085 -capture-auto -capture-output ./downloads
 
 # Filter by domain and confidence
-./fad -capture-proxy :8085 -filter-domain example.com -capture-confidence 50
+./had -capture-proxy :8085 -filter-domain example.com -capture-confidence 50
 
 # Install certificate only
-./fad -install-cert
+./had -install-cert
 ```
 
 ### Download from Captured JSON (NEW)
@@ -146,120 +146,120 @@ After capturing links, download everything with one command:
 
 ```bash
 # Download all captured files
-./fad -download-json captured_links.json
+./had -download-json captured_links.json
 
 # Custom output with concurrent downloads
-./fad -download-json captured_links.json -o ./videos -u 5
+./had -download-json captured_links.json -o ./videos -u 5
 
 # High performance (8 threads per file, 4 concurrent)
-./fad -download-json captured_links.json -t 8 -u 4
+./had -download-json captured_links.json -t 8 -u 4
 ```
 
 ### Basic Downloads
 
 ```bash
 # Download a single file
-./fad https://example.com/file.zip
+./had https://example.com/file.zip
 
 # Download with 16 threads
-./fad -t 16 https://example.com/large-file.zip
+./had -t 16 https://example.com/large-file.zip
 
 # Download multiple files
-./fad https://example.com/file1.zip https://example.com/file2.zip
+./had https://example.com/file1.zip https://example.com/file2.zip
 
 # Download from file list
-./fad -f urls.txt
+./had -f urls.txt
 
 # Download with speed limit (1MB/s)
-./fad -max-speed 1048576 https://example.com/file.zip
+./had -max-speed 1048576 https://example.com/file.zip
 
 # Download with checksum verification
-./fad -checksum-sha256 abc123... https://example.com/file.zip
+./had -checksum-sha256 abc123... https://example.com/file.zip
 ```
 
 ### Website Backup
 
 ```bash
 # Basic full site backup
-./fad web -url https://example.com -mode full
+./had web -url https://example.com -mode full
 
 # Backup entire website to specific directory
-./fad web -url https://example.com -mode full -output ./backup
+./had web -url https://example.com -mode full -output ./backup
 
 # Backup single page with all assets
-./fad web -url https://example.com/about -mode single -download-external
+./had web -url https://example.com/about -mode single -download-external
 
 # Backup with external CDN assets
-./fad web -url https://example.com -mode full -download-external -external-domains cdn.example.com,images.example.com
+./had web -url https://example.com -mode full -download-external -external-domains cdn.example.com,images.example.com
 
 # High performance crawling (10 concurrent workers)
-./fad web -url https://example.com -mode full -concurrency 10 -max-pages 500
+./had web -url https://example.com -mode full -concurrency 10 -max-pages 500
 
 # Resume interrupted backup
-./fad web -url https://example.com -mode full -resume -output ./backup
+./had web -url https://example.com -mode full -resume -output ./backup
 
 # SPA with hash routing support
-./fad web -url https://app.example.com/#!/home -mode full -crawl-hash-routes
+./had web -url https://app.example.com/#!/home -mode full -crawl-hash-routes
 
 # Limit asset size and rate
-./fad web -url https://example.com -mode full -max-asset-size 20 -rate-limit 5
+./had web -url https://example.com -mode full -max-asset-size 20 -rate-limit 5
 ```
 
 ### Metalink Downloads
 
 ```bash
 # Download from Metalink URL
-./fad -metalink https://example.com/file.metalink
+./had -metalink https://example.com/file.metalink
 
 # Download from local Metalink file
-./fad -metalink ./downloads/ubuntu.metalink4
+./had -metalink ./downloads/ubuntu.metalink4
 
 # Metalink with custom output directory
-./fad -metalink https://example.com/file.metalink -o ./downloads
+./had -metalink https://example.com/file.metalink -o ./downloads
 ```
 
 ### RPC Server Mode
 
 ```bash
 # Start RPC server on default port
-./fad -rpc
+./had -rpc
 
 # Start RPC server on custom address
-./fad -rpc -rpc-addr 0.0.0.0:6800
+./had -rpc -rpc-addr 0.0.0.0:6800
 
 # Enable WebSocket RPC (experimental)
-./fad -rpc -rpc-websocket -rpc-addr :6800
+./had -rpc -rpc-websocket -rpc-addr :6800
 
 # RPC with downloads directory
-./fad -rpc -rpc-addr localhost:6800 -o /downloads
+./had -rpc -rpc-addr localhost:6800 -o /downloads
 ```
 
 **RPC Example Requests:**
 
 ```bash
 # Get version info
-curl -X POST http://localhost:6800/jsonrpc -d '{"method":"fad.version","id":1}'
+curl -X POST http://localhost:6800/jsonrpc -d '{"method":"had.version","id":1}'
 
 # Get global statistics
-curl -X POST http://localhost:6800/jsonrpc -d '{"method":"fad.getGlobalStat","id":2}'
+curl -X POST http://localhost:6800/jsonrpc -d '{"method":"had.getGlobalStat","id":2}'
 
 # Add download URL
-curl -X POST http://localhost:6800/jsonrpc -d '{"method":"fad.addUri","params":{"uris":["https://example.com/file.zip"]},"id":3}'
+curl -X POST http://localhost:6800/jsonrpc -d '{"method":"had.addUri","params":{"uris":["https://example.com/file.zip"]},"id":3}'
 
 # Get all files status
-curl -X POST http://localhost:6800/jsonrpc -d '{"method":"fad.tellAllStatus","id":4}'
+curl -X POST http://localhost:6800/jsonrpc -d '{"method":"had.tellAllStatus","id":4}'
 
 # List all available methods
 curl -X POST http://localhost:6800/jsonrpc -d '{"method":"system.listMethods","id":5}'
 
 # Pause all downloads
-curl -X POST http://localhost:6800/jsonrpc -d '{"method":"fad.pauseAll","id":6}'
+curl -X POST http://localhost:6800/jsonrpc -d '{"method":"had.pauseAll","id":6}'
 
 # Set speed limit to 5MB/s
-curl -X POST http://localhost:6800/jsonrpc -d '{"method":"fad.setSpeedLimit","params":{"speed":5242880},"id":7}'
+curl -X POST http://localhost:6800/jsonrpc -d '{"method":"had.setSpeedLimit","params":{"speed":5242880},"id":7}'
 
-# Shutdown FAD
-curl -X POST http://localhost:6800/jsonrpc -d '{"method":"fad.shutdown","id":8}'
+# Shutdown had
+curl -X POST http://localhost:6800/jsonrpc -d '{"method":"had.shutdown","id":8}'
 ```
 
 **REST API Endpoints:**
@@ -285,80 +285,80 @@ curl http://localhost:6800/api/version
 
 ```bash
 # SOCKS5 proxy
-./fad -proxy socks5://127.0.0.1:1080 https://example.com/file.zip
+./had -proxy socks5://127.0.0.1:1080 https://example.com/file.zip
 
 # SOCKS5 with authentication
-./fad -proxy socks5://user:pass@127.0.0.1:1080 https://example.com/file.zip
+./had -proxy socks5://user:pass@127.0.0.1:1080 https://example.com/file.zip
 
 # SOCKS4 proxy with custom threads
-./fad -proxy socks4://192.168.1.1:9050 -t 16 https://example.com/file.zip
+./had -proxy socks4://192.168.1.1:9050 -t 16 https://example.com/file.zip
 
 # HTTP proxy
-./fad -proxy http://proxy.company.com:8080 https://example.com/file.zip
+./had -proxy http://proxy.company.com:8080 https://example.com/file.zip
 
 # HTTPS proxy with auth
-./fad -proxy https://user:pass@proxy.company.com:8080 https://example.com/file.zip
+./had -proxy https://user:pass@proxy.company.com:8080 https://example.com/file.zip
 ```
 
 ### 📡 FTP/SFTP Downloads
 
 ```bash
 # Standard FTP
-./fad -protocol ftp ftp://example.com/file.zip
+./had -protocol ftp ftp://example.com/file.zip
 
 # FTP with custom credentials
-./fad -protocol ftp -ftp-user myuser -ftp-pass mypass ftp://example.com/file.zip
+./had -protocol ftp -ftp-user myuser -ftp-pass mypass ftp://example.com/file.zip
 
 # FTPS (FTP over TLS)
-./fad -protocol ftps ftps://example.com/secure-file.zip
+./had -protocol ftps ftps://example.com/secure-file.zip
 
 # SFTP with password
-./fad -protocol sftp -sftp-user myuser -sftp-pass mypass sftp://example.com/file.zip
+./had -protocol sftp -sftp-user myuser -sftp-pass mypass sftp://example.com/file.zip
 
 # SFTP with SSH key
-./fad -protocol sftp -ssh-key ~/.ssh/id_rsa sftp://example.com/file.zip
+./had -protocol sftp -ssh-key ~/.ssh/id_rsa sftp://example.com/file.zip
 
 # SFTP with encrypted SSH key
-./fad -protocol sftp -ssh-key ~/.ssh/id_rsa -ssh-key-pass mypassphrase sftp://example.com/file.zip
+./had -protocol sftp -ssh-key ~/.ssh/id_rsa -ssh-key-pass mypassphrase sftp://example.com/file.zip
 ```
 
 ### 🕷️ Web Scraping
 
 ```bash
 # Extract and download all files from a page
-./fad -scrape https://example.com/downloads/
+./had -scrape https://example.com/downloads/
 
 # Filter by extensions
-./fad -scrape https://example.com/downloads/ -ex .mp4,.mp3,.zip
+./had -scrape https://example.com/downloads/ -ex .mp4,.mp3,.zip
 
 # Scrape with custom threads
-./fad -scrape https://example.com/files/ -t 16 -ex .pdf,.doc,.xls
+./had -scrape https://example.com/files/ -t 16 -ex .pdf,.doc,.xls
 
 # Scrape and download with progress
-./fad -scrape https://example.com/media/ -ex .jpg,.png,.gif -v
+./had -scrape https://example.com/media/ -ex .jpg,.png,.gif -v
 ```
 
 ### 🔄 Parameterized URLs
 
 ```bash
 # Simple numeric placeholder
-./fad -parameterized-url 'https://example.com/file{}.zip' -start 1 -end 50
+./had -parameterized-url 'https://example.com/file{}.zip' -start 1 -end 50
 
 # Zero-padded placeholders
-./fad -parameterized-url 'https://example.com/image{0}.jpg' -start 1 -end 100
+./had -parameterized-url 'https://example.com/image{0}.jpg' -start 1 -end 100
 
 # Triple zero-padded
-./fad -parameterized-url 'https://example.com/page{00}.html' -start 1 -end 500 -step 2
+./had -parameterized-url 'https://example.com/page{00}.html' -start 1 -end 500 -step 2
 
 # Custom step size
-./fad -parameterized-url 'https://example.com/chunk{}.bin' -start 0 -end 200 -step 10
+./had -parameterized-url 'https://example.com/chunk{}.bin' -start 0 -end 200 -step 10
 ```
 
 ### 🔄 Resume Downloads
 
 ```bash
 # Resume from saved session
-./fad session_20231215_143022.json
+./had session_20231215_143022.json
 
 # Session auto-saves on interrupt (Ctrl+C)
 # Progress saves every 10 seconds automatically
@@ -368,23 +368,23 @@ curl http://localhost:6800/api/version
 
 ```bash
 # Load cookies from Netscape format file (Firefox/Chrome export)
-./fad -load-cookies cookies.txt https://example.com/private-file.zip
+./had -load-cookies cookies.txt https://example.com/private-file.zip
 
 # Save cookies after download
-./fad -save-cookies output.txt https://example.com/file.zip
+./had -save-cookies output.txt https://example.com/file.zip
 
 # Direct cookie string
-./fad -c "sessionid=abc123; user=test" https://example.com/file.zip
+./had -c "sessionid=abc123; user=test" https://example.com/file.zip
 
 # Load and save cookies
-./fad -load-cookies cookies.txt -save-cookies newcookies.txt https://example.com/file.zip
+./had -load-cookies cookies.txt -save-cookies newcookies.txt https://example.com/file.zip
 ```
 
 ### 🔐 NetRC Authentication
 
 ```bash
 # Use .netrc file for authentication
-./fad -netrc ~/.netrc https://example.com/private/file.zip
+./had -netrc ~/.netrc https://example.com/private/file.zip
 
 # .netrc file format:
 # machine example.com login myuser password mypass
@@ -534,7 +534,7 @@ curl http://localhost:6800/api/version
 | Option | Default | Description |
 |--------|---------|-------------|
 | `-daemon` | `false` | Run as daemon process in background |
-| `-pid-file` | `/tmp/fad.pid` | PID file path for daemon mode |
+| `-pid-file` | `/tmp/had.pid` | PID file path for daemon mode |
 
 ## 📝 File Format Examples
 
@@ -579,7 +579,7 @@ sftp://sftp.example.com/backup.tar.gz
 Session files are auto-saved as `{filename}.json` and `{filename}.progress`. To resume:
 
 ```bash
-./fad file.zip.json
+./had file.zip.json
 ```
 
 ### .netrc File Format
@@ -611,7 +611,7 @@ password user@example.com
 **Step 1: Start the capture proxy**
 
 ```bash
-./fad -capture-proxy :8085 -capture-types video -capture-body -verbose
+./had -capture-proxy :8085 -capture-types video -capture-body -verbose
 ```
 
 **Step 2: Configure your browser**
@@ -625,7 +625,7 @@ The proxy captures all video links automatically and saves them to `captured_lin
 **Step 4: Download all captured files**
 
 ```bash
-./fad -download-json captured_links.json -o ./videos -u 5 -t 8
+./had -download-json captured_links.json -o ./videos -u 5 -t 8
 ```
 
 ## 🎨 Output Preview
@@ -704,17 +704,17 @@ Configure FoxyProxy:
 [INFO] Starting JSON-RPC server on localhost:6800
 [INFO] WebSocket RPC: disabled
 [INFO] Available methods:
-  - fad.addUri
-  - fad.remove
-  - fad.tellStatus
-  - fad.tellAllStatus
-  - fad.getGlobalStat
-  - fad.pause
-  - fad.pauseAll
-  - fad.resume
-  - fad.resumeAll
-  - fad.setSpeedLimit
-  - fad.shutdown
+  - had.addUri
+  - had.remove
+  - had.tellStatus
+  - had.tellAllStatus
+  - had.getGlobalStat
+  - had.pause
+  - had.pauseAll
+  - had.resume
+  - had.resumeAll
+  - had.setSpeedLimit
+  - had.shutdown
   - system.listMethods
 ```
 
@@ -729,25 +729,25 @@ Configure FoxyProxy:
 
 ```bash
 # Linux/macOS
-go build -o fad main.go
+go build -o had main.go
 
 # Windows
-GOOS=windows GOARCH=amd64 go build -o fad.exe main.go
+GOOS=windows GOARCH=amd64 go build -o had.exe main.go
 
 # Linux ARM64
-GOOS=linux GOARCH=arm64 go build -o fad-linux-arm64 main.go
+GOOS=linux GOARCH=arm64 go build -o had-linux-arm64 main.go
 
 # With optimizations (smaller binary)
-go build -ldflags="-s -w" -o fad main.go
+go build -ldflags="-s -w" -o had main.go
 
 # Cross-compile all platforms
-GOOS=linux GOARCH=amd64 go build -o fad-linux-amd64 main.go
-GOOS=linux GOARCH=386 go build -o fad-linux-386 main.go
-GOOS=linux GOARCH=arm64 go build -o fad-linux-arm64 main.go
-GOOS=windows GOARCH=amd64 go build -o fad-windows-amd64.exe main.go
-GOOS=windows GOARCH=386 go build -o fad-windows-386.exe main.go
-GOOS=darwin GOARCH=amd64 go build -o fad-darwin-amd64 main.go
-GOOS=darwin GOARCH=arm64 go build -o fad-darwin-arm64 main.go
+GOOS=linux GOARCH=amd64 go build -o had-linux-amd64 main.go
+GOOS=linux GOARCH=386 go build -o had-linux-386 main.go
+GOOS=linux GOARCH=arm64 go build -o had-linux-arm64 main.go
+GOOS=windows GOARCH=amd64 go build -o had-windows-amd64.exe main.go
+GOOS=windows GOARCH=386 go build -o had-windows-386.exe main.go
+GOOS=darwin GOARCH=amd64 go build -o had-darwin-amd64 main.go
+GOOS=darwin GOARCH=arm64 go build -o had-darwin-arm64 main.go
 ```
 
 ## 🐛 Troubleshooting
@@ -756,12 +756,12 @@ GOOS=darwin GOARCH=arm64 go build -o fad-darwin-arm64 main.go
 
 | Question | Solution |
 |----------|----------|
-| **Q: Capture proxy not capturing anything?** | • Install CA certificate: `./fad -install-cert`<br>• Check browser proxy settings (localhost:port)<br>• Ensure HTTPS sites show certificate warning (accept it)<br>• Use `-capture-body` to see hidden links |
+| **Q: Capture proxy not capturing anything?** | • Install CA certificate: `./had -install-cert`<br>• Check browser proxy settings (localhost:port)<br>• Ensure HTTPS sites show certificate warning (accept it)<br>• Use `-capture-body` to see hidden links |
 | **Q: Download from JSON not working?** | • Verify captured_links.json exists<br>• Check URLs are valid in the JSON file<br>• Try with `-v` flag for debug output<br>• Ensure output directory is writable |
-| **Q: Certificate installation fails?** | • Run as administrator/root<br>• Follow manual instructions displayed<br>• Check if Fad.crt file was created<br>• Disable antivirus temporarily |
+| **Q: Certificate installation fails?** | • Run as administrator/root<br>• Follow manual instructions displayed<br>• Check if had.crt file was created<br>• Disable antivirus temporarily |
 | **Q: Slow download speeds?** | • Increase thread count: `-t 16`<br>• Check if server supports range requests<br>• Try FTP multi-part for FTP files<br>• Reduce proxy latency if using proxy |
 | **Q: Proxy not working?** | • Verify proxy format: `socks5://host:port`<br>• Ensure proxy is reachable<br>• Try without authentication first<br>• Check firewall settings |
-| **Q: Resume not working?** | • Ensure server supports `Accept-Ranges: bytes`<br>• Check if session files exist in download directory<br>• Manual resume: `./fad session_file.json`<br>• Some servers don't support resume |
+| **Q: Resume not working?** | • Ensure server supports `Accept-Ranges: bytes`<br>• Check if session files exist in download directory<br>• Manual resume: `./had session_file.json`<br>• Some servers don't support resume |
 | **Q: Website crawl hangs?** | • Use `-resume` flag to continue interrupted crawl<br>• Reduce concurrency: `-concurrency 3`<br>• Increase timeout: `-timeout 60`<br>• Add rate limiting: `-rate-limit 5` |
 | **Q: Assets not downloading?** | • Enable `-download-external` for external resources<br>• Add external domains with `-external-domains`<br>• Check `-max-asset-size` limit<br>• Verify network connectivity to CDN |
 | **Q: SFTP connection fails?** | • Verify SSH key permissions (600)<br>• Check if server supports SFTP (not just SSH)<br>• Try password authentication first<br>• Increase timeout: `-timeout 60` |
@@ -782,7 +782,7 @@ GOOS=darwin GOARCH=arm64 go build -o fad-darwin-arm64 main.go
 9. **For limited disk space:** Reduce `-disk-cache` to 8MB or lower
 10. **For many concurrent downloads:** Use `-u` with 5-10 to avoid connection limits
 11. **For SFTP transfers:** Use SSH keys instead of passwords for better performance
-12. **For Metalink downloads:** Let FAD auto-select best mirrors
+12. **For Metalink downloads:** Let had auto-select best mirrors
 
 ## 🔧 Advanced Usage
 
@@ -790,32 +790,32 @@ GOOS=darwin GOARCH=arm64 go build -o fad-darwin-arm64 main.go
 
 ```bash
 # Start daemon
-./fad -daemon -o /downloads https://example.com/bigfile.zip
+./had -daemon -o /downloads https://example.com/bigfile.zip
 
 # Check status
-cat /tmp/fad.pid
+cat /tmp/had.pid
 
 # Stop daemon
-kill $(cat /tmp/fad.pid)
+kill $(cat /tmp/had.pid)
 
 # Systemd service
-sudo cat > /etc/systemd/system/fad.service << EOF
+sudo cat > /etc/systemd/system/had.service << EOF
 [Unit]
-Description=FAD Downloader Service
+Description=had Downloader Service
 After=network.target
 
 [Service]
 Type=simple
 User=downloader
-ExecStart=/usr/local/bin/fad -daemon -o /downloads -rpc
+ExecStart=/usr/local/bin/had -daemon -o /downloads -rpc
 Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-sudo systemctl enable fad
-sudo systemctl start fad
+sudo systemctl enable had
+sudo systemctl start had
 ```
 
 ### Using Environment Variables
@@ -827,46 +827,46 @@ export HTTPS_PROXY=http://proxy:8080
 export NO_PROXY=localhost,127.0.0.1
 
 # Run with environment
-./fad https://example.com/file.zip
+./had https://example.com/file.zip
 ```
 
 ### Combining with Other Tools
 
 ```bash
 # Download and extract
-./fad https://example.com/archive.zip && unzip archive.zip
+./had https://example.com/archive.zip && unzip archive.zip
 
 # Download and verify signature
-./fad https://example.com/file.iso && sha256sum -c file.iso.sha256
+./had https://example.com/file.iso && sha256sum -c file.iso.sha256
 
 # Download list from another program output
-cat urls.txt | xargs -n1 ./fad
+cat urls.txt | xargs -n1 ./had
 
 # Scheduled downloads with cron
-0 2 * * * /usr/local/bin/fad https://example.com/daily-backup.zip -o /backups
+0 2 * * * /usr/local/bin/had https://example.com/daily-backup.zip -o /backups
 ```
 
 ### Custom Headers Example
 
 ```bash
 # Multiple custom headers
-./fad -H "Authorization: Bearer token123" -H "X-Custom-Header: value" https://api.example.com/file.zip
+./had -H "Authorization: Bearer token123" -H "X-Custom-Header: value" https://api.example.com/file.zip
 
 # User-Agent override
-./fad -H "User-Agent: MyCustomBot/1.0" https://example.com/file.zip
+./had -H "User-Agent: MyCustomBot/1.0" https://example.com/file.zip
 
 # Referer header
-./fad -H "Referer: https://google.com" https://example.com/file.zip
+./had -H "Referer: https://google.com" https://example.com/file.zip
 ```
 
 ### Capture Proxy with Custom Headers
 
 ```bash
 # Add authentication headers to capture proxy
-./fad -capture-proxy :8085 -capture-header "Authorization: Bearer token123" -capture-header "X-API-Key: abc123"
+./had -capture-proxy :8085 -capture-header "Authorization: Bearer token123" -capture-header "X-API-Key: abc123"
 
 # Pass cookies through proxy
-./fad -capture-proxy :8085 -capture-cookie "sessionid=abc123; user=test"
+./had -capture-proxy :8085 -capture-cookie "sessionid=abc123; user=test"
 ```
 
 ## 🔒 Security Note
@@ -888,11 +888,11 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ### Development Setup
 
 ```bash
-git clone https://github.com/Mr-Spect3r/fad.git
-cd fad
+git clone https://github.com/Mr-Spect3r/had.git
+cd had
 go mod download
-go build -o fad main.go
-./fad -v https://example.com/test.zip
+go build -o had main.go
+./had -v https://example.com/test.zip
 ```
 
 ## 🙏 Acknowledgments
@@ -905,4 +905,4 @@ go build -o fad main.go
 
 **⭐ Star this repository if you find it useful!**
 
-[Report Bug](https://github.com/Mr-Spect3r/fad/issues) · [Request Feature](https://github.com/Mr-Spect3r/fad/issues) · [View Releases](https://github.com/Mr-Spect3r/fad/releases)
+[Report Bug](https://github.com/Mr-Spect3r/had/issues) · [Request Feature](https://github.com/Mr-Spect3r/had/issues) · [View Releases](https://github.com/Mr-Spect3r/had/releases)
