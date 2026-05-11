@@ -1,4 +1,4 @@
-module github.com/Mr-Spect3r/fad
+module github.com/Mr-Spect3r/fad2
 
 go 1.26
 
