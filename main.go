@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/Mr-Spect3r/fad/core"
-	"github.com/Mr-Spect3r/fad/lib"
+	"github.com/Mr-Spect3r/fad/web"
 )
 
 func main() {
