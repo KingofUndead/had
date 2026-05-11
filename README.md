@@ -721,6 +721,125 @@ Configure FoxyProxy:
   - system.listMethods
 ```
 
+## 🔧 Manual Extension Installation & Certificate Setup
+
+### Extension for Capturing (extension-had)
+
+HAD includes a browser extension for easier capture proxy integration. The extension files are located in the `extensions-had/` folder.
+
+#### Manual Installation
+
+**For Chrome / Brave / Edge (Chromium-based):**
+
+1. Open your browser and navigate to `chrome://extensions`
+2. Enable **"Developer mode"** (toggle in top-right corner)
+3. Click **"Load unpacked"** button
+4. Navigate to HAD extension folder: ````./extensions-had```` (or full path like ````/path/to/had/extensions-had````)
+5. Select the folder and click **"Select Folder"**
+6. The HAD Capture extension should now appear in your extensions list
+
+**For Firefox:**
+
+1. Open Firefox and navigate to `about:debugging`
+2. Click on **"This Firefox"** in left sidebar
+3. Click **"Load Temporary Add-on"** button
+4. Navigate to ````./extensions-had/```` folder
+5. Select the ````manifest.json```` file
+6. **Note:** Firefox loads extensions temporarily. For permanent installation, you'll need to package and sign the extension
+
+#### Extension Configuration
+
+1. Click the HAD extension icon in your browser toolbar
+2. Set the proxy address (default: ````localhost:8085````)
+3. Enable/disable capture modes as needed
+4. The extension automatically redirects traffic through HAD capture proxy when active
+
+### CA Certificate Installation
+
+For HTTPS interception to work properly, you must install HAD's Certificate Authority (CA) certificate on your system.
+
+#### Automatic Installation (Recommended)
+
+```bash
+# Install certificate automatically
+./had -install-cert
+
+# Or run with capture proxy (auto-installs if needed)
+./had -capture-proxy :8085
+```
+
+#### Manual Installation
+
+When automatic installation fails, follow these steps:
+
+**Step 1: Generate the certificate**
+
+```bash
+# Run HAD once to generate the certificate
+./had -capture-proxy :8085
+# Certificate will be created as 'had.crt' in the current directory
+# Press Ctrl+C to stop after generation
+```
+
+**Step 2: Install certificate on your OS**
+
+**Windows:**
+1. Double-click ````had.crt```` file
+2. Click **"Install Certificate"**
+3. Select **"Local Machine"** (requires admin privileges)
+4. Choose **"Place all certificates in the following store"**
+5. Click **"Browse"** and select **"Trusted Root Certification Authorities"**
+6. Click **"OK"** → **"Next"** → **"Finish"**
+7. Restart your browser
+
+**Linux (Ubuntu/Debian):**
+
+```bash
+# Copy certificate to system trust store
+sudo cp had.crt /usr/local/share/ca-certificates/had.crt
+sudo update-ca-certificates
+
+# For Firefox (manual)
+# Go to about:preferences#privacy → View Certificates → Import → Select had.crt
+# Check "Trust this CA to identify websites"
+```
+
+**Linux (RHEL/Fedora):**
+
+```bash
+sudo cp had.crt /etc/pki/ca-trust/source/anchors/
+sudo update-ca-trust
+```
+
+**macOS:**
+
+```bash
+# Add to system keychain
+sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain had.crt
+
+# Or double-click had.crt → Add to Keychain → Trust → Always Trust
+```
+
+**Step 3: Verify installation**
+
+```bash
+# Start capture proxy
+./had -capture-proxy :8085
+
+# Configure browser to use localhost:8085 as HTTP/HTTPS proxy
+# Visit https://example.com - you should NOT see certificate warnings
+```
+
+### Troubleshooting Certificate Issues
+
+| Problem | Solution |
+|---------|----------|
+| Certificate warning in browser | Reinstall certificate as Trusted Root |
+| Extension not capturing | Check proxy settings (localhost:8085) |
+| "ERR_PROXY_CONNECTION_FAILED" | Ensure HAD is running with `-capture-proxy` |
+| Firefox shows "Connection not secure" | Manually import `had.crt` to Firefox certificate store |
+| Automatic installation fails | Run as administrator/root or use manual method |
+
 ## 🛠️ Building from Source
 
 ### Prerequisites
