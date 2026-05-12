@@ -2,8 +2,9 @@
   "manifest_version": 3,
   "name": "Had Proxy",
   "version": "1.0",
-  "description": "A proxy manager For Had Project",
-  "permissions": ["proxy", "storage"],
+  "description": "A proxy manager with cookie editor for Had Project",
+  "permissions": ["proxy", "storage", "cookies", "activeTab", "clipboardWrite"],
+  "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"
   },
