@@ -3,6 +3,19 @@
 [![Go Version](https://img.shields.io/badge/Go-1.26+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS%20%7C%20ARM64-lightgrey)]()
 
+<div dir="auto">
+  <a href="https://github.com/Mr-Spect3r/had/blob/main/README.md">
+    <img src="https://img.shields.io/badge/English-🇬🇧-blue" alt="English">
+  </a>
+  <a href="https://github.com/Mr-Spect3r/had/blob/main/readmeFA.md">
+    <img src="https://img.shields.io/badge/فارسی-🇮🇷-green" alt="فارسی">
+  </a>
+</div>
+
+---
+
+**English** | [**فارسی**](https://github.com/Mr-Spect3r/had/blob/main/readmeFA.md)
+
 A powerful, multi-threaded downloader with support for **HTTP/HTTPS**, **FTP/FTPS**, **SFTP**, **Metalink**, **MITM Capture Proxy**, **proxy connections**, **smart resume capabilities**, **JSON-RPC interface**, and **complete website backup tool**. Built for speed and reliability.
 
 ## 🎉 New in v3.2.5
