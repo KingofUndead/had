@@ -76,11 +76,9 @@ jobs:
 
       - name: Setup Heavy Dependencies (Only when needed)
         run: |
-          # نصب فقط ابزارهای سبک اولیه
-          sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends wget curl git jq bc
           
-          # یه فایل مارکر برای نشان دادن اینکه ابزارهای سنگین نصب شدن
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends wget curl git jq bc          
           touch light_tools_installed
 
       - name: Setup YouTube API Script (Fast API)
@@ -92,7 +90,6 @@ jobs:
           quality_input = sys.argv[2]
           outdir = sys.argv[3]
           
-          # API های مختلف برای failover
           APIS = [
               {
                   'url': 'https://hub.ytconvert.org/api/download',
@@ -154,7 +151,7 @@ jobs:
               return None
           
           def download_via_api_fallback(url, quality_input, outdir):
-              # متد جایگزین ساده - دانلود از یوتیوب مستقیم با yt-dlp
+            
               import subprocess
               if "Audio" in quality_input:
                   cmd = f"yt-dlp -x --audio-format mp3 -o '{outdir}/%(title)s.%(ext)s' '{url}'"
@@ -168,13 +165,11 @@ jobs:
           
           if __name__ == "__main__":
               try:
-                  # اول با API اصلی تلاش کن
                   result = download_via_api1(url, quality_input, outdir)
                   if result:
                       print(f"Downloaded: {result}")
                       sys.exit(0)
                   
-                  # اگه نشد، با fallback تلاش کن
                   print("API failed, trying fallback...")
                   result = download_via_api_fallback(url, quality_input, outdir)
                   if result:
@@ -311,7 +306,6 @@ jobs:
                   echo "✅ Downloaded via Fast API"
                 else
                   echo "⚠️ Fast API failed, falling back to yt-dlp..."
-                  # نصب yt-dlp در صورت نیاز
                   if ! command -v yt-dlp &> /dev/null; then
                     sudo apt-get install -y ffmpeg
                     sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
