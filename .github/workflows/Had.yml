@@ -1,0 +1,569 @@
+name: Professional Smart Downloader
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Target URLs (Separate with space, comma, or new line)'
+        required: true
+        type: string
+      youtube_method:
+        description: 'YouTube Download Method'
+        required: true
+        type: choice
+        options:
+          - 'Fast API (No Cookies needed - Fastest)'
+          - 'yt-dlp (Reliable - Use this if you have Cookies)'
+      quality:
+        description: 'Video Quality (for supported extractors)'
+        required: true
+        type: choice
+        options:
+          - 'Best (Highest available)'
+          - '1080p (MP4 format)'
+          - '720p (MP4 format)'
+          - '480p (MP4 format)'
+          - '360p (MP4 format)'
+          - 'Audio (MP3 format)'
+      password:
+        description: 'ZIP Password (Optional)'
+        required: false
+        type: string
+        default: ''
+      custom_headers:
+        description: 'Custom Headers (JSON format: {"Header1": "Value1"})'
+        required: false
+        type: string
+        default: ''
+      threads:
+        description: 'Download Threads (for HAD)'
+        required: false
+        type: number
+        default: 16
+      auto_retry:
+        description: 'Auto retry on failure'
+        required: false
+        type: boolean
+        default: true
+      split_size:
+        description: 'Split size in MB (0 = no split)'
+        required: false
+        type: number
+        default: 95
+      upload_to_uploadkon:
+        description: 'Upload files to uploadkon.ir instead of GitHub'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  smart-download:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      YOUTUBE_COOKIES: ${{ secrets.YOUTUBE_COOKIES }}
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Fast Setup (Minimal)
+        run: |
+          pip3 install requests --break-system-packages 2>/dev/null || pip3 install requests
+
+      - name: Setup Heavy Dependencies (Only when needed)
+        run: |
+          # نصب فقط ابزارهای سبک اولیه
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends wget curl git jq bc
+          
+          # یه فایل مارکر برای نشان دادن اینکه ابزارهای سنگین نصب شدن
+          touch light_tools_installed
+
+      - name: Setup YouTube API Script (Fast API)
+        run: |
+          cat << 'EOF' > yt_api.py
+          import os, sys, time, requests, re
+          
+          url = sys.argv[1]
+          quality_input = sys.argv[2]
+          outdir = sys.argv[3]
+          
+          # API های مختلف برای failover
+          APIS = [
+              {
+                  'url': 'https://hub.ytconvert.org/api/download',
+                  'headers': {
+                      'User-Agent': 'Mozilla/5.0',
+                      'Accept': 'application/json',
+                      'Referer': 'https://media.ytmp3.gg/',
+                      'Origin': 'https://media.ytmp3.gg'
+                  }
+              },
+              {
+                  'url': 'https://api.yt1s.com/api/ajaxSearch',
+                  'headers': {
+                      'User-Agent': 'Mozilla/5.0',
+                      'Content-Type': 'application/x-www-form-urlencoded'
+                  }
+              }
+          ]
+          
+          def download_via_api1(url, quality_input, outdir):
+              if "Audio" in quality_input:
+                  payload = {'url': url, 'os': 'linux', 'output': {'type': 'audio', 'format': 'mp3'}, 'audio': {'bitrate': '320k'}}
+                  ext = 'mp3'
+              else:
+                  q = '720p'
+                  if '1080' in quality_input: q = '1080p'
+                  elif '480' in quality_input: q = '480p'
+                  elif '360' in quality_input: q = '360p'
+                  payload = {'url': url, 'os': 'linux', 'output': {'type': 'video', 'format': 'mp4', 'quality': q}}
+                  ext = 'mp4'
+              
+              resp = requests.post('https://hub.ytconvert.org/api/download', json=payload, headers={'User-Agent': 'Mozilla/5.0'}, timeout=15)
+              if resp.status_code != 200:
+                  return None
+              
+              status_url = resp.json().get('statusUrl')
+              if not status_url:
+                  return None
+              
+              for _ in range(60):
+                  time.sleep(2)
+                  s_resp = requests.get(status_url, headers={'User-Agent': 'Mozilla/5.0'}, timeout=10)
+                  if s_resp.status_code == 200:
+                      data = s_resp.json()
+                      if data.get('status') == 'completed':
+                          dl_url = data.get('downloadUrl')
+                          raw_title = data.get('title', 'YouTube_Video')
+                          title = re.sub(r'[\\/*?:"<>| ]', '_', raw_title)
+                          if dl_url:
+                              filepath = os.path.join(outdir, f"{title}.{ext}")
+                              dl_req = requests.get(dl_url, stream=True, timeout=60)
+                              with open(filepath, "wb") as f:
+                                  for chunk in dl_req.iter_content(8192):
+                                      if chunk:
+                                          f.write(chunk)
+                              return filepath
+                      elif data.get('status') in ('failed', 'error'):
+                          return None
+              return None
+          
+          def download_via_api_fallback(url, quality_input, outdir):
+              # متد جایگزین ساده - دانلود از یوتیوب مستقیم با yt-dlp
+              import subprocess
+              if "Audio" in quality_input:
+                  cmd = f"yt-dlp -x --audio-format mp3 -o '{outdir}/%(title)s.%(ext)s' '{url}'"
+              else:
+                  cmd = f"yt-dlp -f 'best[height<=720]' -o '{outdir}/%(title)s.%(ext)s' '{url}'"
+              
+              result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+              if result.returncode == 0:
+                  return "success"
+              return None
+          
+          if __name__ == "__main__":
+              try:
+                  # اول با API اصلی تلاش کن
+                  result = download_via_api1(url, quality_input, outdir)
+                  if result:
+                      print(f"Downloaded: {result}")
+                      sys.exit(0)
+                  
+                  # اگه نشد، با fallback تلاش کن
+                  print("API failed, trying fallback...")
+                  result = download_via_api_fallback(url, quality_input, outdir)
+                  if result:
+                      sys.exit(0)
+                  
+                  sys.exit(1)
+              except Exception as e:
+                  print(f"Error: {e}")
+                  sys.exit(1)
+          EOF
+
+      - name: Setup Cookies (for yt-dlp fallback)
+        run: |
+          if [ -n "$YOUTUBE_COOKIES" ]; then
+            printf "%s" "$YOUTUBE_COOKIES" > youtube_cookies.txt
+            echo "✅ YouTube cookies loaded from secret"
+          else
+            echo "⚠️ No YouTube cookies found"
+            touch youtube_cookies.txt
+          fi
+
+      - name: Headers Converter
+        run: |
+          cat << "EOF" > headers_converter.py
+          import json, sys
+          def json_to_had_headers(headers_json):
+              if not headers_json or headers_json.strip() == '' or headers_json == '{}':
+                  return []
+              try:
+                  headers = json.loads(headers_json)
+                  return [f'-H "{k}: {v}"' for k, v in headers.items()]
+              except:
+                  return []
+          if __name__ == "__main__":
+              if len(sys.argv) > 1:
+                  had_args = json_to_had_headers(sys.argv[1])
+                  print(' '.join(had_args))
+          EOF
+
+      - name: Uploadkon Script
+        run: |
+          cat << "EOF" > uploadkon.py
+          import requests, json, re, sys, os
+          def upload_file_to_uploadkon(filepath):
+              session = requests.Session()
+              filename = os.path.basename(filepath)
+              session.headers.update({
+                  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                  "Accept": "*/*",
+                  "Accept-Language": "en-US,en;q=0.9",
+              })
+              session.get("https://uploadkon.ir/")
+              headers = {
+                  "X-Requested-With": "XMLHttpRequest",
+                  "Origin": "https://uploadkon.ir",
+                  "Referer": "https://uploadkon.ir/",
+              }
+              with open(filepath, "rb") as f:
+                  files = {
+                      "file": (filename, f, "application/octet-stream"),
+                      "submitr": (None, "1"),
+                      "ajax": (None, "1"),
+                  }
+                  response = session.post("https://uploadkon.ir/", files=files, headers=headers)
+              try:
+                  data = response.json()[0]
+                  if data.get("message_type") == "error":
+                      return {"error": data.get("i", "Unknown error")}
+                  else:
+                      links = re.findall(r'https?://[^\s<>"]+', data["message_content"])
+                      if links:
+                          return {"download_link": links[0], "delete_link": links[2] if len(links) > 2 else "Not found"}
+                      else:
+                          return {"error": "No links found"}
+              except:
+                  return {"error": "Failed to parse response"}
+          if __name__ == "__main__":
+              if len(sys.argv) > 1:
+                  print(json.dumps(upload_file_to_uploadkon(sys.argv[1])))
+          EOF
+
+      - name: Install yt-dlp (Only if needed)
+        run: |
+
+          YT_METHOD="${{ github.event.inputs.youtube_method }}"
+          if [[ "$YT_METHOD" == *"yt-dlp"* ]]; then
+            echo "Installing yt-dlp and dependencies..."
+            sudo apt-get install -y --no-install-recommends aria2 ffmpeg
+            sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+            sudo chmod a+rx /usr/local/bin/yt-dlp
+            curl -fsSL https://bun.com/install | bash
+            echo "$HOME/.bun/bin" >> $GITHUB_PATH
+          fi
+          
+          wget -q https://go.dev/dl/go1.21.5.linux-amd64.tar.gz
+          sudo tar -C /usr/local -xzf go1.21.5.linux-amd64.tar.gz
+          echo "/usr/local/go/bin" >> $GITHUB_PATH
+          export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
+          go install github.com/Mr-Spect3r/had@3.2.5
+          echo "$HOME/go/bin" >> $GITHUB_PATH
+
+      - name: Intelligent Download Manager
+        shell: bash
+        run: |
+          RAW_URLS="${{ github.event.inputs.url }}"
+          QUALITY="${{ github.event.inputs.quality }}"
+          YT_METHOD="${{ github.event.inputs.youtube_method }}"
+          CUSTOM_HEADERS="${{ github.event.inputs.custom_headers }}"
+          THREADS="${{ github.event.inputs.threads }}"
+          AUTO_RETRY="${{ github.event.inputs.auto_retry }}"
+          
+          FORMATTED_URLS=$(echo "$RAW_URLS" | sed 's/[,\n]/ /g' | tr -s ' ')
+          
+          rm -rf tmp_downloads
+          mkdir -p tmp_downloads dl
+          
+          HAD_HEADERS=$(python3 headers_converter.py "$CUSTOM_HEADERS")
+          RETRY_FLAG=""
+          if [ "$AUTO_RETRY" = "true" ]; then
+            RETRY_FLAG="--retry 3"
+          fi
+          
+          for URL in $FORMATTED_URLS; do
+            if [ -z "$URL" ]; then
+              continue
+            fi
+            
+            echo "Processing URL: $URL"
+            
+            if echo "$URL" | grep -qE "(youtube\.com|youtu\.be)"; then
+              if [[ "$YT_METHOD" == *"Fast API"* ]]; then
+                echo "🟢 Using Fast API method (No cookies needed)..."
+                if python3 yt_api.py "$URL" "$QUALITY" "tmp_downloads"; then
+                  echo "✅ Downloaded via Fast API"
+                else
+                  echo "⚠️ Fast API failed, falling back to yt-dlp..."
+                  # نصب yt-dlp در صورت نیاز
+                  if ! command -v yt-dlp &> /dev/null; then
+                    sudo apt-get install -y ffmpeg
+                    sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+                    sudo chmod a+rx /usr/local/bin/yt-dlp
+                    curl -fsSL https://bun.com/install | bash
+                    export PATH="$HOME/.bun/bin:$PATH"
+                  fi
+                  
+                  COOKIE_ARG=""
+                  [ -s youtube_cookies.txt ] && COOKIE_ARG="--cookies youtube_cookies.txt"
+                  
+                  if [[ "$QUALITY" == *"Audio"* ]]; then
+                    yt-dlp $RETRY_FLAG $COOKIE_ARG -x --audio-format mp3 -o "tmp_downloads/%(title)s.%(ext)s" "$URL"
+                  else
+                    yt-dlp $RETRY_FLAG $COOKIE_ARG -f "best[height<=720]/best" -o "tmp_downloads/%(title)s.%(ext)s" "$URL"
+                  fi
+                fi
+              else
+                echo "🟡 Using yt-dlp method..."
+                if ! command -v yt-dlp &> /dev/null; then
+                  sudo apt-get install -y ffmpeg
+                  sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
+                  sudo chmod a+rx /usr/local/bin/yt-dlp
+                  curl -fsSL https://bun.com/install | bash
+                  export PATH="$HOME/.bun/bin:$PATH"
+                fi
+                
+                COOKIE_ARG=""
+                [ -s youtube_cookies.txt ] && COOKIE_ARG="--cookies youtube_cookies.txt"
+                
+                if [[ "$QUALITY" == *"1080p"* ]]; then
+                  YT_F="-f bestvideo[height<=1080]+bestaudio/best[height<=1080]"
+                elif [[ "$QUALITY" == *"720p"* ]]; then
+                  YT_F="-f bestvideo[height<=720]+bestaudio/best[height<=720]"
+                elif [[ "$QUALITY" == *"480p"* ]]; then
+                  YT_F="-f bestvideo[height<=480]+bestaudio/best[height<=480]"
+                elif [[ "$QUALITY" == *"360p"* ]]; then
+                  YT_F="-f bestvideo[height<=360]+bestaudio/best[height<=360]"
+                elif [[ "$QUALITY" == *"Audio"* ]]; then
+                  YT_F="-x --audio-format mp3"
+                else
+                  YT_F="-f bestvideo+bestaudio/best"
+                fi
+                
+                yt-dlp $RETRY_FLAG --js-runtimes bun:$HOME/.bun/bin/bun $COOKIE_ARG $YT_F --merge-output-format mp4 -o "tmp_downloads/%(title)s.%(ext)s" "$URL"
+              fi
+            else
+              cd tmp_downloads
+              HAD_CMD="had -t $THREADS"
+              if [ -n "$HAD_HEADERS" ]; then
+                HAD_CMD="$HAD_CMD $HAD_HEADERS"
+              fi
+              HAD_CMD="$HAD_CMD \"$URL\""
+              eval $HAD_CMD || true
+              cd ..
+            fi
+          done
+          
+          echo "Files in tmp_downloads:"
+          ls -la tmp_downloads/
+
+      - name: Zip and Split Manager
+        shell: bash
+        run: |
+          HAS_PASS="${{ github.event.inputs.password }}"
+          SPLIT_SIZE="${{ github.event.inputs.split_size }}"
+          
+          if [ -z "$SPLIT_SIZE" ] || [ "$SPLIT_SIZE" -eq 0 ]; then
+            LIMIT=999999999
+            SPLIT_ARG=""
+          else
+            LIMIT=$((SPLIT_SIZE * 1024 * 1024))
+            SPLIT_ARG="-s ${SPLIT_SIZE}m"
+          fi
+          
+          rm -f files_to_process.txt
+          
+          if [ ! -d "tmp_downloads" ]; then
+            echo "tmp_downloads directory not found"
+            exit 0
+          fi
+          
+          for FILE in tmp_downloads/*; do
+            if [ ! -f "$FILE" ]; then
+              continue
+            fi
+            SIZE=$(stat -c%s "$FILE")
+            BASENAME=$(basename "$FILE")
+            SAFE_NAME=$(echo "$BASENAME" | sed 's/[^a-zA-Z0-9._-]/_/g')
+            
+            rm -f "dl/${SAFE_NAME}".* 2>/dev/null
+            
+            if [ -n "$HAS_PASS" ] || [ "$SIZE" -gt "$LIMIT" ]; then
+              PASS_ARG=""
+              if [ -n "$HAS_PASS" ]; then
+                PASS_ARG="-P $HAS_PASS"
+              fi
+              zip $PASS_ARG $SPLIT_ARG "dl/${SAFE_NAME}.zip" -j "$FILE" > /dev/null 2>&1
+              
+              for ZPART in "dl/${SAFE_NAME}.zip" "dl/${SAFE_NAME}".z[0-9]*; do
+                if [ -f "$ZPART" ]; then
+                  basename "$ZPART" >> files_to_process.txt
+                fi
+              done
+            else
+              cp -f "$FILE" "dl/$SAFE_NAME"
+              echo "$SAFE_NAME" >> files_to_process.txt
+            fi
+          done
+          
+          rm -rf tmp_downloads
+
+      - name: Upload to Uploadkon or Keep on GitHub
+        shell: bash
+        run: |
+          UPLOAD_TO_UPLOADKON="${{ github.event.inputs.upload_to_uploadkon }}"
+          
+          if [ ! -s files_to_process.txt ]; then
+            echo "No files to process"
+            exit 0
+          fi
+          
+          if [ "$UPLOAD_TO_UPLOADKON" = "true" ]; then
+            echo "Uploading files to uploadkon.ir..."
+            rm -f uploaded_files.txt
+            touch uploaded_files.txt
+            
+            while IFS= read -r FILENAME; do
+              if [ -z "$FILENAME" ]; then
+                continue
+              fi
+              
+              FILEPATH="dl/$FILENAME"
+              if [ -f "$FILEPATH" ]; then
+                echo "Uploading: $FILENAME"
+                RESULT=$(python3 uploadkon.py "$FILEPATH")
+                DOWNLOAD_LINK=$(echo "$RESULT" | python3 -c "import sys, json; d=json.load(sys.stdin); print(d.get('download_link', ''))")
+                DELETE_LINK=$(echo "$RESULT" | python3 -c "import sys, json; d=json.load(sys.stdin); print(d.get('delete_link', ''))")
+                
+                if [ -n "$DOWNLOAD_LINK" ] && [ "$DOWNLOAD_LINK" != "None" ]; then
+                  echo "${FILENAME}|${DOWNLOAD_LINK}|${DELETE_LINK}" >> uploaded_files.txt
+                  rm -f "$FILEPATH"
+                else
+                  echo "${FILENAME}|ERROR|" >> uploaded_files.txt
+                fi
+              fi
+            done < files_to_process.txt
+            
+            rm -f files_to_process.txt
+            if [ -f uploaded_files.txt ]; then
+              mv uploaded_files.txt files_to_process.txt
+            fi
+          else
+            mv files_to_process.txt new_files.txt
+          fi
+
+      - name: Generate Links.md
+        shell: bash
+        run: |
+          if [ ! -s files_to_process.txt ] && [ ! -s new_files.txt ]; then
+            echo "No files to generate links"
+            exit 0
+          fi
+          
+          UPLOAD_TO_UPLOADKON="${{ github.event.inputs.upload_to_uploadkon }}"
+          REPO="${{ github.repository }}"
+          BRANCH="${GITHUB_REF_NAME}"
+          RUN_ID="${{ github.run_id }}"
+          
+          if [ -f files_to_process.txt ]; then
+            TOTAL_FILES=$(cat files_to_process.txt | wc -l)
+            SOURCE_FILE="files_to_process.txt"
+          else
+            TOTAL_FILES=$(cat new_files.txt | wc -l)
+            SOURCE_FILE="new_files.txt"
+          fi
+          
+          CURRENT_DATE=$(TZ='Asia/Tehran' date +'%Y-%m-%d %H:%M:%S')
+          
+          echo "# Download Links" > Links.md
+          echo "" >> Links.md
+          echo "**Last Updated:** $CURRENT_DATE (IRST)" >> Links.md
+          echo "" >> Links.md
+          echo "---" >> Links.md
+          echo "" >> Links.md
+          echo "## Statistics" >> Links.md
+          echo "" >> Links.md
+          echo "| Metric | Value |" >> Links.md
+          echo "|--------|-------|" >> Links.md
+          echo "| Total Files | $TOTAL_FILES |" >> Links.md
+          echo "| Repository | $REPO |" >> Links.md
+          echo "| Branch | $BRANCH |" >> Links.md
+          echo "| Run ID | $RUN_ID |" >> Links.md
+          echo "" >> Links.md
+          echo "---" >> Links.md
+          echo "" >> Links.md
+          echo "## Download List" >> Links.md
+          echo "" >> Links.md
+          
+          while IFS= read -r LINE; do
+            if [ -z "$LINE" ]; then
+              continue
+            fi
+            
+            if [ "$UPLOAD_TO_UPLOADKON" = "true" ]; then
+              FILENAME=$(echo "$LINE" | cut -d'|' -f1)
+              DOWNLOAD_LINK=$(echo "$LINE" | cut -d'|' -f2)
+              DELETE_LINK=$(echo "$LINE" | cut -d'|' -f3)
+              
+              if [ "$DOWNLOAD_LINK" = "ERROR" ]; then
+                continue
+              fi
+              
+              DISPLAY_NAME=$(echo "$FILENAME" | sed 's/\.zip$//; s/\.z[0-9]\+$//; s/[_\-\.]/ /g')
+            else
+              FILENAME="$LINE"
+              DOWNLOAD_LINK="https://github.com/$REPO/raw/$BRANCH/dl/$FILENAME"
+              DISPLAY_NAME=$(echo "$FILENAME" | sed 's/\.zip$//; s/\.z[0-9]\+$//; s/[_\-\.]/ /g')
+            fi
+            
+            if [ -f "dl/$FILENAME" ]; then
+              SIZE_BYTES=$(stat -c%s "dl/$FILENAME" 2>/dev/null || echo 0)
+              if [ $SIZE_BYTES -ge 1073741824 ]; then
+                SIZE_VALUE=$(echo "scale=2; $SIZE_BYTES/1073741824" | bc)
+                SIZE_STR="${SIZE_VALUE} GB"
+              elif [ $SIZE_BYTES -ge 1048576 ]; then
+                SIZE_VALUE=$(echo "scale=1; $SIZE_BYTES/1048576" | bc)
+                SIZE_STR="${SIZE_VALUE} MB"
+              else
+                if [ $SIZE_BYTES -gt 0 ]; then
+                  SIZE_VALUE=$((SIZE_BYTES/1024))
+                  SIZE_STR="${SIZE_VALUE} KB"
+                else
+                  SIZE_STR="Unknown"
+                fi
+              fi
+            else
+              SIZE_STR="Unknown"
+            fi
+            
+            echo "- **$DISPLAY_NAME** - [Download]($DOWNLOAD_LINK) - Size: $SIZE_STR" >> Links.md
+            echo "" >> Links.md
+          done < "$SOURCE_FILE"
+          
+          rm -f files_to_process.txt new_files.txt
+
+      - name: Push to Repository
+        run: |
+          BRANCH="${GITHUB_REF_NAME}"
+          git config user.name "Downloader Bot"
+          git config user.email "actions@github.com"
+          git add dl/ Links.md
+          git status
+          git commit -m "Add downloaded files [skip ci]" || echo "No changes to commit"
+          git push origin HEAD:$BRANCH || echo "Push failed"
