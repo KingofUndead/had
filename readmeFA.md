@@ -97,17 +97,17 @@ HAD اکنون شامل **پروکسی ضبط MITM** است که ترافیک HT
 
 ### نصب با Go
 
-+++bash
+```bash
 go install github.com/Mr-Spect3r/had@3.2.5
-+++
+```
 
 ### نصب از روی سورس
 
-+++bash
+```bash
 git clone https://github.com/Mr-Spect3r/had.git
 cd had
 go build -o had .
-+++
+```
 
 ## 🚀 شروع سریع
 
@@ -115,7 +115,7 @@ go build -o had .
 
 ضبط لینک‌های دانلود در حین مرور:
 
-+++bash
+```bash
 # شروع پروکسی ضبط روی پورت 8085
 ./had -capture-proxy :8085 -capture-types video,music
 
@@ -130,13 +130,13 @@ go build -o had .
 
 # فقط نصب گواهی
 ./had -install-cert
-+++
+```
 
 ### دانلود از JSON ضبط شده (جدید)
 
 بعد از ضبط لینک‌ها، همه چیز را با یک دستور دانلود کنید:
 
-+++bash
+```bash
 # دانلود همه فایل‌های ضبط شده
 ./had -download-json captured_links.json
 
@@ -145,11 +145,11 @@ go build -o had .
 
 # کارایی بالا (8 رشته برای هر فایل، 4 دانلود همزمان)
 ./had -download-json captured_links.json -t 8 -u 4
-+++
+```
 
 ### دانلود‌های پایه
 
-+++bash
+```bash
 # دانلود یک فایل
 ./had https://example.com/file.zip
 
@@ -167,11 +167,11 @@ go build -o had .
 
 # دانلود با بررسی جمع‌بازی
 ./had -checksum-sha256 abc123... https://example.com/file.zip
-+++
+```
 
 ### پشتیبان‌گیری از وب‌سایت
 
-+++bash
+```bash
 # پشتیبان کامل پایه از سایت
 ./had web -url https://example.com -mode full
 
@@ -195,11 +195,11 @@ go build -o had .
 
 # محدودیت اندازه دارایی و نرخ
 ./had web -url https://example.com -mode full -max-asset-size 20 -rate-limit 5
-+++
+```
 
 ### دانلود Metalink
 
-+++bash
+```bash
 # دانلود از آدرس Metalink
 ./had -metalink https://example.com/file.metalink
 
@@ -208,11 +208,11 @@ go build -o had .
 
 # Metalink با دایرکتوری خروجی سفارشی
 ./had -metalink https://example.com/file.metalink -o ./downloads
-+++
+```
 
 ### حالت سرور RPC
 
-+++bash
+```bash
 # شروع سرور RPC روی پورت پیش‌فرض
 ./had -rpc
 
@@ -224,11 +224,11 @@ go build -o had .
 
 # RPC با دایرکتوری دانلودها
 ./had -rpc -rpc-addr localhost:6800 -o /downloads
-+++
+```
 
 **نمونه درخواست‌های RPC:**
 
-+++bash
+```bash
 # دریافت اطلاعات نسخه
 curl -X POST http://localhost:6800/jsonrpc -d '{"method":"had.version","id":1}'
 
@@ -252,11 +252,11 @@ curl -X POST http://localhost:6800/jsonrpc -d '{"method":"had.setSpeedLimit","pa
 
 # خاموش کردن had
 curl -X POST http://localhost:6800/jsonrpc -d '{"method":"had.shutdown","id":8}'
-+++
+```
 
 **نقاط پایانی REST API:**
 
-+++bash
+```bash
 # دریافت وضعیت کلی
 curl http://localhost:6800/api/status
 
@@ -271,11 +271,11 @@ curl http://localhost:6800/api/resume
 
 # اطلاعات نسخه
 curl http://localhost:6800/api/version
-+++
+```
 
 ### 🔐 دانلود از طریق پروکسی
 
-+++bash
+```bash
 # پروکسی SOCKS5
 ./had -proxy socks5://127.0.0.1:1080 https://example.com/file.zip
 
@@ -290,11 +290,11 @@ curl http://localhost:6800/api/version
 
 # پروکسی HTTPS با احراز هویت
 ./had -proxy https://user:pass@proxy.company.com:8080 https://example.com/file.zip
-+++
+```
 
 ### 📡 دانلود FTP/SFTP
 
-+++bash
+```bash
 # FTP استاندارد
 ./had -protocol ftp ftp://example.com/file.zip
 
@@ -312,11 +312,11 @@ curl http://localhost:6800/api/version
 
 # SFTP با کلید SSH رمزگذاری شده
 ./had -protocol sftp -ssh-key ~/.ssh/id_rsa -ssh-key-pass mypassphrase sftp://example.com/file.zip
-+++
+```
 
 ### 🕷️ وب اسکرپینگ
 
-+++bash
+```bash
 # استخراج و دانلود همه فایل‌ها از یک صفحه
 ./had -scrape https://example.com/downloads/
 
@@ -328,11 +328,11 @@ curl http://localhost:6800/api/version
 
 # اسکرپینگ و دانلود با پیشرفت
 ./had -scrape https://example.com/media/ -ex .jpg,.png,.gif -v
-+++
+```
 
 ### 🔄 آدرس‌های پارامتری
 
-+++bash
+```bash
 # جایگذاری عددی ساده
 ./had -parameterized-url 'https://example.com/file{}.zip' -start 1 -end 50
 
@@ -344,21 +344,21 @@ curl http://localhost:6800/api/version
 
 # اندازه گام سفارشی
 ./had -parameterized-url 'https://example.com/chunk{}.bin' -start 0 -end 200 -step 10
-+++
+```
 
 ### 🔄 ادامه دانلودها
 
-+++bash
+```bash
 # ادامه از جلسه ذخیره شده
 ./had session_20231215_143022.json
 
 # جلسه به طور خودکار با قطع شدن (Ctrl+C) ذخیره می‌شود
 # پیشرفت هر 10 ثانیه به طور خودکار ذخیره می‌شود
-+++
+```
 
 ### 🍪 پشتیبانی از کوکی
 
-+++bash
+```bash
 # بارگذاری کوکی از فایل فرمت Netscape (خروجی Firefox/Chrome)
 ./had -load-cookies cookies.txt https://example.com/private-file.zip
 
@@ -370,15 +370,15 @@ curl http://localhost:6800/api/version
 
 # بارگذاری و ذخیره کوکی
 ./had -load-cookies cookies.txt -save-cookies newcookies.txt https://example.com/file.zip
-+++
+```
 
 ### 🔐 احراز هویت NetRC
 
-+++bash
+```bash
 # استفاده از فایل .netrc برای احراز هویت
 ./had -netrc ~/.netrc https://example.com/private/file.zip
 
 # فرمت فایل .netrc:
 # machine example.com login myuser password mypass
 # default login anonymous password user@example.com
-+++
+```
