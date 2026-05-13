@@ -144,14 +144,6 @@ async def generate():
 asyncio.run(generate())
 ```
 
-### گرفتن api_id و api_hash
-
-1. به [my.telegram.org](https://my.telegram.org) برو
-2. وارد حساب خودت بشو
-3. برو به **API Development Tools**
-4. یک اپ جدید بساز
-5. مقادیر `api_id` و `api_hash` رو کپی کن
-
 > ⚠️ **عدد api_id و api_hash رو توی کد جایگزین کن بعد اجرا کن**
 
 ---
