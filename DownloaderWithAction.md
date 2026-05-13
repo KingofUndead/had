@@ -136,26 +136,18 @@ asyncio.run(generate())
 
 برای آپلود روی روبیکا، نیاز به فایل احراز هویت داری.
 
-### مرحله ۱: ساخت فایل rubpy.rp
+### مرحله ۱: ساخت فایل rubpy.rp , فشرده‌سازی و تبدیل به متن
 
 اول با کتابخونه `rubpy` وارد حساب روبیکات بشو و فایل سشن رو بساز:
 
 ```python
 from rubpy import Client
+import lzma
+import base64
 
 client = Client(name="rubpy")
 client.start()
 print("✅ وارد شدید! فایل rubpy.rp ساخته شد.")
-input("Enter رو بزنید تا خارج بشید...")
-```
-
-### مرحله ۲: فشرده‌سازی و تبدیل به متن
-
-بعد از ساخته شدن فایل `rubpy.rp`، این کد رو اجرا کن تا رشته احراز هویت رو بگیری:
-
-```python
-import lzma
-import base64
 
 with open("rubpy.rp", "rb") as f:
     compressed = lzma.compress(f.read(), preset=9)
@@ -171,6 +163,9 @@ with open("rubika_auth.txt", "w") as f:
     f.write(auth_string)
 print("✅ در فایل 'rubika_auth.txt' ذخیره شد.")
 ```
+
+بعد از ساخته شدن فایل `rubpy.rp`، این کد رو اجرا کن تا رشته احراز هویت رو بگیری:
+
 
 > ⚠️ **این رشته رو موقع اجرا توی فیلد `rubika_auth_string` وارد کن**
 
