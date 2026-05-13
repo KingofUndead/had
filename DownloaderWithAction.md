@@ -159,7 +159,7 @@ pip install rubpy
 
 ### مرحله ۱: ساخت فایل rubpy.rp , فشرده‌سازی و تبدیل به متن
 
-اول با کتابخونه `rubpy` وارد حساب روبیکات بشو و فایل سشن رو بساز:
+اول با کتابخونه `rubpy` وارد حساب روبیکات بشو و فایل سشن رو بساز و کپیش کن:
 
 ```python
 from rubpy import Client
@@ -184,9 +184,6 @@ with open("rubika_auth.txt", "w") as f:
     f.write(auth_string)
 print("✅ در فایل 'rubika_auth.txt' ذخیره شد.")
 ```
-
-بعد از ساخته شدن فایل `rubpy.rp`، این کد رو اجرا کن تا رشته احراز هویت رو بگیری:
-
 
 > ⚠️ **این رشته رو موقع اجرا توی فیلد `rubika_auth_string` وارد کن**
 
