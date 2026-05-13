@@ -55,6 +55,21 @@ on:
         required: false
         type: boolean
         default: false
+      upload_to_rubika:
+        description: 'Upload files to Rubika (Saved Messages)'
+        required: false
+        type: boolean
+        default: false
+      rubika_auth_string:
+        description: 'Rubika Auth String (Required if upload_to_rubika is true)'
+        required: false
+        type: string
+        default: ''
+      telegram_string_session:
+        description: 'Telegram String Session (for downloading files from Telegram links)'
+        required: false
+        type: string
+        default: ''
 
 jobs:
   smart-download:
@@ -62,6 +77,8 @@ jobs:
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       YOUTUBE_COOKIES: ${{ secrets.YOUTUBE_COOKIES }}
+      API_ID: 12345
+      API_HASH: "Herer_Specter_For_Help_you"
     permissions:
       contents: write
     steps:
@@ -70,18 +87,60 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Fast Setup (Minimal)
+      - name: Detect URL Types
+        id: detect
+        shell: bash
+        run: |
+          RAW_URLS="${{ github.event.inputs.url }}"
+          FORMATTED_URLS=$(echo "$RAW_URLS" | sed 's/[,\n]/ /g' | tr -s ' ')
+          
+          HAS_TELEGRAM=false
+          HAS_YOUTUBE=false
+          HAS_OTHER=false
+          
+          for URL in $FORMATTED_URLS; do
+            if [ -z "$URL" ]; then
+              continue
+            fi
+            
+            if echo "$URL" | grep -qE "(t\.me|telegram\.me)"; then
+              HAS_TELEGRAM=true
+            elif echo "$URL" | grep -qE "(youtube\.com|youtu\.be)"; then
+              HAS_YOUTUBE=true
+            else
+              HAS_OTHER=true
+            fi
+          done
+          
+          echo "has_telegram=$HAS_TELEGRAM" >> $GITHUB_OUTPUT
+          echo "has_youtube=$HAS_YOUTUBE" >> $GITHUB_OUTPUT
+          echo "has_other=$HAS_OTHER" >> $GITHUB_OUTPUT
+
+      - name: Fast Setup
         run: |
           pip3 install requests --break-system-packages 2>/dev/null || pip3 install requests
 
-      - name: Setup Heavy Dependencies (Only when needed)
+      - name: Setup Basic Dependencies
+        if: steps.detect.outputs.has_youtube == 'true' || steps.detect.outputs.has_other == 'true'
         run: |
-          
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends wget curl git jq bc          
+          sudo apt-get install -y --no-install-recommends wget curl git jq bc
           touch light_tools_installed
 
-      - name: Setup YouTube API Script (Fast API)
+      - name: Setup Python Dependencies for Telegram
+        if: steps.detect.outputs.has_telegram == 'true'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends python3-pip
+          pip3 install telethon asyncio requests
+
+      - name: Setup Rubika Dependencies
+        if: github.event.inputs.upload_to_rubika == 'true'
+        run: |
+          pip3 install rubpy --break-system-packages 2>/dev/null || pip3 install rubpy
+
+      - name: Setup YouTube API Script
+        if: steps.detect.outputs.has_youtube == 'true'
         run: |
           cat << 'EOF' > yt_api.py
           import os, sys, time, requests, re
@@ -89,25 +148,6 @@ jobs:
           url = sys.argv[1]
           quality_input = sys.argv[2]
           outdir = sys.argv[3]
-          
-          APIS = [
-              {
-                  'url': 'https://hub.ytconvert.org/api/download',
-                  'headers': {
-                      'User-Agent': 'Mozilla/5.0',
-                      'Accept': 'application/json',
-                      'Referer': 'https://media.ytmp3.gg/',
-                      'Origin': 'https://media.ytmp3.gg'
-                  }
-              },
-              {
-                  'url': 'https://api.yt1s.com/api/ajaxSearch',
-                  'headers': {
-                      'User-Agent': 'Mozilla/5.0',
-                      'Content-Type': 'application/x-www-form-urlencoded'
-                  }
-              }
-          ]
           
           def download_via_api1(url, quality_input, outdir):
               if "Audio" in quality_input:
@@ -151,7 +191,6 @@ jobs:
               return None
           
           def download_via_api_fallback(url, quality_input, outdir):
-            
               import subprocess
               if "Audio" in quality_input:
                   cmd = f"yt-dlp -x --audio-format mp3 -o '{outdir}/%(title)s.%(ext)s' '{url}'"
@@ -181,17 +220,19 @@ jobs:
                   sys.exit(1)
           EOF
 
-      - name: Setup Cookies (for yt-dlp fallback)
+      - name: Setup Cookies for yt-dlp
+        if: steps.detect.outputs.has_youtube == 'true'
         run: |
           if [ -n "$YOUTUBE_COOKIES" ]; then
             printf "%s" "$YOUTUBE_COOKIES" > youtube_cookies.txt
-            echo "✅ YouTube cookies loaded from secret"
+            echo "YouTube cookies loaded from secret"
           else
-            echo "⚠️ No YouTube cookies found"
+            echo "No YouTube cookies found"
             touch youtube_cookies.txt
           fi
 
       - name: Headers Converter
+        if: steps.detect.outputs.has_other == 'true'
         run: |
           cat << "EOF" > headers_converter.py
           import json, sys
@@ -207,6 +248,151 @@ jobs:
               if len(sys.argv) > 1:
                   had_args = json_to_had_headers(sys.argv[1])
                   print(' '.join(had_args))
+          EOF
+
+      - name: Telegram Downloader Script
+        if: steps.detect.outputs.has_telegram == 'true'
+        run: |
+          cat << 'EOF' > telegram_downloader.py
+          import asyncio
+          import os
+          import re
+          import sys
+          from telethon import TelegramClient
+          from telethon.sessions import StringSession
+          
+          async def download_telegram_file(string_session, url, download_path):
+              try:
+                  api_id = int(os.environ.get('API_ID', 12345))
+                  api_hash = os.environ.get('API_HASH', 'Herer_Specter_For_Help_you')
+                  
+                  if not string_session or string_session.strip() == '':
+                      return {"error": "No Telegram string session provided"}
+                  
+                  client = TelegramClient(StringSession(string_session), api_id, api_hash)
+                  await client.start()
+                  
+                  pattern = r"https?://(?:t\.me|telegram\.me)/(?:c/)?([^/]+)/(\d+)"
+                  match = re.match(pattern, url)
+                  
+                  if not match:
+                      return {"error": "Invalid Telegram link"}
+                  
+                  entity = match.group(1)
+                  msg_id = int(match.group(2))
+                  
+                  if entity.isdigit():
+                      entity = int(entity)
+                  
+                  message = await client.get_messages(entity, ids=msg_id)
+                  
+                  if not message or not message.media:
+                      return {"error": "Message not found or has no media"}
+                  
+                  os.makedirs(download_path, exist_ok=True)
+                  
+                  file_name = None
+                  if hasattr(message.file, 'name') and message.file.name:
+                      file_name = message.file.name
+                  else:
+                      ext = ".jpg" if hasattr(message.media, 'photo') else ".file"
+                      file_name = f"telegram_{msg_id}{ext}"
+                  
+                  file_path = os.path.join(download_path, file_name)
+                  
+                  download_path_result = await client.download_media(message, file=file_path)
+                  
+                  await client.disconnect()
+                  
+                  if download_path_result:
+                      return {"success": True, "file_path": download_path_result, "file_name": file_name}
+                  else:
+                      return {"error": "Download failed"}
+                  
+              except Exception as e:
+                  return {"error": str(e)}
+          
+          if __name__ == "__main__":
+              if len(sys.argv) >= 4:
+                  string_session = sys.argv[1]
+                  url = sys.argv[2]
+                  download_path = sys.argv[3]
+                  
+                  result = asyncio.run(download_telegram_file(string_session, url, download_path))
+                  
+                  if result.get("success"):
+                      print(f"SUCCESS:{result['file_path']}")
+                  else:
+                      print(f"ERROR:{result.get('error', 'Unknown error')}")
+                  sys.exit(0 if result.get("success") else 1)
+              else:
+                  print("ERROR: Missing arguments")
+                  sys.exit(1)
+          EOF
+
+      - name: Rubika Uploader Script
+        if: github.event.inputs.upload_to_rubika == 'true'
+        run: |
+          cat << 'EOF' > rubika_uploader.py
+          import os
+          import sys
+          import base64
+          import lzma
+          from rubpy import Client as RubikaClient
+          
+          def decode_auth_string(auth_string):
+              try:
+                  compressed = base64.b64decode(auth_string)
+                  decompressed = lzma.decompress(compressed)
+                  return decompressed
+              except Exception as e:
+                  print(f"Failed to decode auth string: {e}")
+                  return None
+          
+          def upload_to_rubika(file_path, auth_string, caption):
+              if not os.path.exists(file_path):
+                  print(f"ERROR:File not found: {file_path}")
+                  return None
+              
+              rubpy_data = decode_auth_string(auth_string)
+              if not rubpy_data:
+                  print("ERROR:Failed to decode Rubika auth string")
+                  return None
+              
+              with open("rubpy.rp", "wb") as f:
+                  f.write(rubpy_data)
+              
+              print(f"Uploading to Rubika: {os.path.basename(file_path)}")
+              
+              try:
+                  client = RubikaClient(name="rubpy")
+                  client.start()
+                  
+                  result = client.send_document("me", file_path, caption=caption)
+                  
+                  client.disconnect()
+                  
+                  print(f"SUCCESS:Uploaded to Rubika")
+                  return result
+              except Exception as e:
+                  print(f"ERROR:Rubika upload failed: {e}")
+                  return None
+          
+          if __name__ == "__main__":
+              if len(sys.argv) >= 4:
+                  file_path = sys.argv[1]
+                  auth_string = sys.argv[2]
+                  caption = sys.argv[3] if len(sys.argv) > 3 else "Downloaded With HAD!\\nProject: https://github.com/Mr-Spect3r/had"
+                  
+                  result = upload_to_rubika(file_path, auth_string, caption)
+                  
+                  if result:
+                      sys.exit(0)
+                  else:
+                      sys.exit(1)
+              else:
+                  print("ERROR: Missing arguments")
+                  sys.exit(1)
           EOF
 
       - name: Uploadkon Script
@@ -251,11 +437,12 @@ jobs:
                   print(json.dumps(upload_file_to_uploadkon(sys.argv[1])))
           EOF
 
-      - name: Install yt-dlp (Only if needed)
+      - name: Install Heavy Tools
+        if: steps.detect.outputs.has_youtube == 'true' || steps.detect.outputs.has_other == 'true'
         run: |
-
           YT_METHOD="${{ github.event.inputs.youtube_method }}"
-          if [[ "$YT_METHOD" == *"yt-dlp"* ]]; then
+          
+          if [[ "$YT_METHOD" == *"yt-dlp"* ]] || [ "${{ steps.detect.outputs.has_youtube }}" = "true" ]; then
             echo "Installing yt-dlp and dependencies..."
             sudo apt-get install -y --no-install-recommends aria2 ffmpeg
             sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
@@ -264,12 +451,14 @@ jobs:
             echo "$HOME/.bun/bin" >> $GITHUB_PATH
           fi
           
-          wget -q https://go.dev/dl/go1.21.5.linux-amd64.tar.gz
-          sudo tar -C /usr/local -xzf go1.21.5.linux-amd64.tar.gz
-          echo "/usr/local/go/bin" >> $GITHUB_PATH
-          export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
-          go install github.com/Mr-Spect3r/had@3.2.5
-          echo "$HOME/go/bin" >> $GITHUB_PATH
+          if [ "${{ steps.detect.outputs.has_other }}" = "true" ]; then
+            wget -q https://go.dev/dl/go1.21.5.linux-amd64.tar.gz
+            sudo tar -C /usr/local -xzf go1.21.5.linux-amd64.tar.gz
+            echo "/usr/local/go/bin" >> $GITHUB_PATH
+            export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
+            go install github.com/Mr-Spect3r/had@3.2.5
+            echo "$HOME/go/bin" >> $GITHUB_PATH
+          fi
 
       - name: Intelligent Download Manager
         shell: bash
@@ -280,13 +469,18 @@ jobs:
           CUSTOM_HEADERS="${{ github.event.inputs.custom_headers }}"
           THREADS="${{ github.event.inputs.threads }}"
           AUTO_RETRY="${{ github.event.inputs.auto_retry }}"
+          TELEGRAM_STRING_SESSION="${{ github.event.inputs.telegram_string_session }}"
           
           FORMATTED_URLS=$(echo "$RAW_URLS" | sed 's/[,\n]/ /g' | tr -s ' ')
           
           rm -rf tmp_downloads
           mkdir -p tmp_downloads dl
           
-          HAD_HEADERS=$(python3 headers_converter.py "$CUSTOM_HEADERS")
+          HAD_HEADERS=""
+          if [ "${{ steps.detect.outputs.has_other }}" = "true" ]; then
+            HAD_HEADERS=$(python3 headers_converter.py "$CUSTOM_HEADERS")
+          fi
+          
           RETRY_FLAG=""
           if [ "$AUTO_RETRY" = "true" ]; then
             RETRY_FLAG="--retry 3"
@@ -301,11 +495,11 @@ jobs:
             
             if echo "$URL" | grep -qE "(youtube\.com|youtu\.be)"; then
               if [[ "$YT_METHOD" == *"Fast API"* ]]; then
-                echo "🟢 Using Fast API method (No cookies needed)..."
+                echo "Using Fast API method..."
                 if python3 yt_api.py "$URL" "$QUALITY" "tmp_downloads"; then
-                  echo "✅ Downloaded via Fast API"
+                  echo "Downloaded via Fast API"
                 else
-                  echo "⚠️ Fast API failed, falling back to yt-dlp..."
+                  echo "Fast API failed, falling back to yt-dlp..."
                   if ! command -v yt-dlp &> /dev/null; then
                     sudo apt-get install -y ffmpeg
                     sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
@@ -324,7 +518,7 @@ jobs:
                   fi
                 fi
               else
-                echo "🟡 Using yt-dlp method..."
+                echo "Using yt-dlp method..."
                 if ! command -v yt-dlp &> /dev/null; then
                   sudo apt-get install -y ffmpeg
                   sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
@@ -352,15 +546,33 @@ jobs:
                 
                 yt-dlp $RETRY_FLAG --js-runtimes bun:$HOME/.bun/bin/bun $COOKIE_ARG $YT_F --merge-output-format mp4 -o "tmp_downloads/%(title)s.%(ext)s" "$URL"
               fi
-            else
-              cd tmp_downloads
-              HAD_CMD="had -t $THREADS"
-              if [ -n "$HAD_HEADERS" ]; then
-                HAD_CMD="$HAD_CMD $HAD_HEADERS"
+            elif echo "$URL" | grep -qE "(t\.me|telegram\.me)"; then
+              echo "Telegram link detected..."
+              if [ -n "$TELEGRAM_STRING_SESSION" ] && [ "$TELEGRAM_STRING_SESSION" != "" ]; then
+                RESULT=$(python3 telegram_downloader.py "$TELEGRAM_STRING_SESSION" "$URL" "tmp_downloads")
+                if echo "$RESULT" | grep -q "^SUCCESS:"; then
+                  FILE_PATH=$(echo "$RESULT" | sed 's/^SUCCESS://')
+                  echo "Telegram file downloaded: $FILE_PATH"
+                else
+                  ERROR_MSG=$(echo "$RESULT" | sed 's/^ERROR://')
+                  echo "Failed to download Telegram file: $ERROR_MSG"
+                fi
+              else
+                echo "No Telegram string session provided. Skipping Telegram download."
               fi
-              HAD_CMD="$HAD_CMD \"$URL\""
-              eval $HAD_CMD || true
-              cd ..
+            else
+              if [ "${{ steps.detect.outputs.has_other }}" = "true" ]; then
+                cd tmp_downloads
+                HAD_CMD="had -t $THREADS"
+                if [ -n "$HAD_HEADERS" ]; then
+                  HAD_CMD="$HAD_CMD $HAD_HEADERS"
+                fi
+                HAD_CMD="$HAD_CMD \"$URL\""
+                eval $HAD_CMD || true
+                cd ..
+              else
+                echo "Skipping URL: $URL"
+              fi
             fi
           done
           
@@ -418,17 +630,52 @@ jobs:
           
           rm -rf tmp_downloads
 
-      - name: Upload to Uploadkon or Keep on GitHub
+      - name: Upload Files
         shell: bash
         run: |
           UPLOAD_TO_UPLOADKON="${{ github.event.inputs.upload_to_uploadkon }}"
+          UPLOAD_TO_RUBIKA="${{ github.event.inputs.upload_to_rubika }}"
+          RUBIKA_AUTH_STRING="${{ github.event.inputs.rubika_auth_string }}"
           
           if [ ! -s files_to_process.txt ]; then
             echo "No files to process"
             exit 0
           fi
           
-          if [ "$UPLOAD_TO_UPLOADKON" = "true" ]; then
+          if [ "$UPLOAD_TO_RUBIKA" = "true" ]; then
+            if [ -z "$RUBIKA_AUTH_STRING" ] || [ "$RUBIKA_AUTH_STRING" = "" ]; then
+              echo "ERROR: Rubika auth string is required when upload_to_rubika is true"
+              exit 1
+            fi
+            
+            echo "Uploading files to Rubika..."
+            rm -f rubika_uploaded.txt
+            touch rubika_uploaded.txt
+            
+            while IFS= read -r FILENAME; do
+              if [ -z "$FILENAME" ]; then
+                continue
+              fi
+              
+              FILEPATH="dl/$FILENAME"
+              if [ -f "$FILEPATH" ]; then
+                echo "Uploading to Rubika: $FILENAME"
+                CAPTION="Downloaded File: $FILENAME\nProject: https://github.com/Mr-Spect3r/had"
+                python3 rubika_uploader.py "$FILEPATH" "$RUBIKA_AUTH_STRING" "$CAPTION"
+                if [ $? -eq 0 ]; then
+                  echo "${FILENAME}|UPLOADED_TO_RUBIKA" >> rubika_uploaded.txt
+                  rm -f "$FILEPATH"
+                else
+                  echo "${FILENAME}|RUBIKA_UPLOAD_FAILED" >> rubika_uploaded.txt
+                fi
+              fi
+            done < files_to_process.txt
+            
+            rm -f files_to_process.txt
+            if [ -f rubika_uploaded.txt ]; then
+              mv rubika_uploaded.txt files_to_process.txt
+            fi
+          elif [ "$UPLOAD_TO_UPLOADKON" = "true" ]; then
             echo "Uploading files to uploadkon.ir..."
             rm -f uploaded_files.txt
             touch uploaded_files.txt
@@ -471,6 +718,7 @@ jobs:
           fi
           
           UPLOAD_TO_UPLOADKON="${{ github.event.inputs.upload_to_uploadkon }}"
+          UPLOAD_TO_RUBIKA="${{ github.event.inputs.upload_to_rubika }}"
           REPO="${{ github.repository }}"
           BRANCH="${GITHUB_REF_NAME}"
           RUN_ID="${{ github.run_id }}"
@@ -510,7 +758,19 @@ jobs:
               continue
             fi
             
-            if [ "$UPLOAD_TO_UPLOADKON" = "true" ]; then
+            if [ "$UPLOAD_TO_RUBIKA" = "true" ]; then
+              FILENAME=$(echo "$LINE" | cut -d'|' -f1)
+              STATUS=$(echo "$LINE" | cut -d'|' -f2)
+              
+              DISPLAY_NAME=$(echo "$FILENAME" | sed 's/\.zip$//; s/\.z[0-9]\+$//; s/[_\-\.]/ /g')
+              
+              if [ "$STATUS" = "UPLOADED_TO_RUBIKA" ]; then
+                echo "- **$DISPLAY_NAME** - ✅ Uploaded to Rubika (Saved in Rubika Saved Messages)" >> Links.md
+              else
+                echo "- **$DISPLAY_NAME** - ❌ Rubika upload failed" >> Links.md
+              fi
+              echo "" >> Links.md
+            elif [ "$UPLOAD_TO_UPLOADKON" = "true" ]; then
               FILENAME=$(echo "$LINE" | cut -d'|' -f1)
               DOWNLOAD_LINK=$(echo "$LINE" | cut -d'|' -f2)
               DELETE_LINK=$(echo "$LINE" | cut -d'|' -f3)
@@ -520,34 +780,36 @@ jobs:
               fi
               
               DISPLAY_NAME=$(echo "$FILENAME" | sed 's/\.zip$//; s/\.z[0-9]\+$//; s/[_\-\.]/ /g')
+              echo "- **$DISPLAY_NAME** - [Download]($DOWNLOAD_LINK) - [Delete]($DELETE_LINK)" >> Links.md
+              echo "" >> Links.md
             else
               FILENAME="$LINE"
               DOWNLOAD_LINK="https://github.com/$REPO/raw/$BRANCH/dl/$FILENAME"
               DISPLAY_NAME=$(echo "$FILENAME" | sed 's/\.zip$//; s/\.z[0-9]\+$//; s/[_\-\.]/ /g')
-            fi
-            
-            if [ -f "dl/$FILENAME" ]; then
-              SIZE_BYTES=$(stat -c%s "dl/$FILENAME" 2>/dev/null || echo 0)
-              if [ $SIZE_BYTES -ge 1073741824 ]; then
-                SIZE_VALUE=$(echo "scale=2; $SIZE_BYTES/1073741824" | bc)
-                SIZE_STR="${SIZE_VALUE} GB"
-              elif [ $SIZE_BYTES -ge 1048576 ]; then
-                SIZE_VALUE=$(echo "scale=1; $SIZE_BYTES/1048576" | bc)
-                SIZE_STR="${SIZE_VALUE} MB"
-              else
-                if [ $SIZE_BYTES -gt 0 ]; then
-                  SIZE_VALUE=$((SIZE_BYTES/1024))
-                  SIZE_STR="${SIZE_VALUE} KB"
+              
+              if [ -f "dl/$FILENAME" ]; then
+                SIZE_BYTES=$(stat -c%s "dl/$FILENAME" 2>/dev/null || echo 0)
+                if [ $SIZE_BYTES -ge 1073741824 ]; then
+                  SIZE_VALUE=$(echo "scale=2; $SIZE_BYTES/1073741824" | bc)
+                  SIZE_STR="${SIZE_VALUE} GB"
+                elif [ $SIZE_BYTES -ge 1048576 ]; then
+                  SIZE_VALUE=$(echo "scale=1; $SIZE_BYTES/1048576" | bc)
+                  SIZE_STR="${SIZE_VALUE} MB"
                 else
-                  SIZE_STR="Unknown"
+                  if [ $SIZE_BYTES -gt 0 ]; then
+                    SIZE_VALUE=$((SIZE_BYTES/1024))
+                    SIZE_STR="${SIZE_VALUE} KB"
+                  else
+                    SIZE_STR="Unknown"
+                  fi
                 fi
+              else
+                SIZE_STR="Unknown"
               fi
-            else
-              SIZE_STR="Unknown"
+              
+              echo "- **$DISPLAY_NAME** - [Download]($DOWNLOAD_LINK) - Size: $SIZE_STR" >> Links.md
+              echo "" >> Links.md
             fi
-            
-            echo "- **$DISPLAY_NAME** - [Download]($DOWNLOAD_LINK) - Size: $SIZE_STR" >> Links.md
-            echo "" >> Links.md
           done < "$SOURCE_FILE"
           
           rm -f files_to_process.txt new_files.txt
