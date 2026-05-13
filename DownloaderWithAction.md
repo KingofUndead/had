@@ -97,6 +97,23 @@
 ```python
 pip install telethon
 ```
+
+### 📨 ساخت String Session تلگرام
+
+برای دانلود از تلگرام، نیاز به String Session داری.
+
+#### مرحله ۱: گرفتن api_id و api_hash
+
+1. به سایت [my.telegram.org](https://my.telegram.org) برو
+2. با شماره تلفن خودت وارد شو
+3. روی **API Development Tools** کلیک کن
+4. اگر قبلاً اپلیکیشنی نساختی، روی **Create Application** کلیک کن
+5. هر اسمی میخوای وارد کن (مثلاً MyDownloader)
+6. بعد از ساختن، مقادیر **api_id** و **api_hash** رو کپی کن
+
+> 📸 **api_id** یک عدد است مثل `1234567`
+> 📸 **api_hash** یک متن طولانی است مثل `7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p`
+
 برای دانلود از تلگرام، نیاز به String Session داری. کد زیر رو اجرا کن:
 
 ```python
