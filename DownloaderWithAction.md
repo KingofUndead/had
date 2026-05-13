@@ -92,6 +92,11 @@
 
 ## 📨 ساخت String Session تلگرام
 
+### نصب کتابخونه
+
+```python
+pip install telethon
+```
 برای دانلود از تلگرام، نیاز به String Session داری. کد زیر رو اجرا کن:
 
 ```python
@@ -133,6 +138,11 @@ asyncio.run(generate())
 ---
 
 ## 📱 ساخت Auth String روبیکا
+
+### نصب کتابخونه
+```python
+pip install rubpy
+```
 
 برای آپلود روی روبیکا، نیاز به فایل احراز هویت داری.
 
