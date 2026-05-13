@@ -205,7 +205,7 @@ print("✅ در فایل 'rubika_auth.txt' ذخیره شد.")
 | **Quality** | کیفیت ویدیو | `480p` یا `720p` یا `Audio` |
 | **Password** | رمز فایل (اختیاری) | `mysecret123` |
 | **Split Size** | حداکثر حجم هر قطعه (مگابایت) | `95` |
-| **Upload to uploadkon** | آپلود روی سرور خارجی | `true` یا `false` |
+| **Upload to uploadkon** | آپلود روی سرور داخلی | `true` یا `false` |
 | **Upload to Rubika** | آپلود روی روبیکا | `true` یا `false` |
 | **Rubika Auth String** | رشته احراز هویت روبیکا | (از مرحله قبل) |
 | **Telegram String Session** | رشته سشن تلگرام | (از مرحله قبل) |
